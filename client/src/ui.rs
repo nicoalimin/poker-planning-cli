@@ -87,10 +87,10 @@ fn draw_main(f: &mut Frame, app: &App) {
             Phase::Revealed => "REVEALED",
         };
         let status_text = format!(
-            "Phase: {:?} | Ticket: {} | Self: {}", 
-            state.phase, 
+            "Phase: {} | Ticket: {} | Players: {}", 
+            phase_str, 
             state.current_ticket.as_ref().map(|t| t.title.clone()).unwrap_or("None".to_string()),
-            app.self_id.unwrap_or_default()
+            state.players.len()
         );
         let status_bar = Paragraph::new(status_text)
             .block(Block::default().borders(Borders::ALL).title("Status"))
@@ -334,19 +334,29 @@ fn draw_main(f: &mut Frame, app: &App) {
         
         // If Revealed, show stats
         let mut stats_text = String::new();
-        if let Phase::Revealed = state.phase {
-             let votes: Vec<u32> = state.votes.values().filter_map(|v| *v).collect();
-             if !votes.is_empty() {
-                 let sum: u32 = votes.iter().sum();
-                 let count = votes.len();
-                 let avg = sum as f32 / count as f32;
-                 let min = votes.iter().min().unwrap();
-                 let max = votes.iter().max().unwrap();
-                 stats_text = format!("\n\nStats:\nCount: {}\nAvg: {:.1}\nMin: {}\nMax: {}", count, avg, min, max);
-             } else {
-                 stats_text = "\n\nNo votes cast.".to_string();
-             }
-        }
+         if let Phase::Revealed = state.phase {
+              let votes: Vec<u32> = state.votes.iter()
+                  .filter_map(|(pid, val)| {
+                      if let Some(p) = state.players.get(pid) {
+                          if p.confirmed {
+                              return *val;
+                          }
+                      }
+                      None
+                  })
+                  .collect();
+                  
+              if !votes.is_empty() {
+                  let sum: u32 = votes.iter().sum();
+                  let count = votes.len();
+                  let avg = sum as f32 / count as f32;
+                  let min = votes.iter().min().unwrap();
+                  let max = votes.iter().max().unwrap();
+                  stats_text = format!("\n\nStats:\nCount: {}\nAvg: {:.1}\nMin: {}\nMax: {}", count, avg, min, max);
+              } else {
+                  stats_text = "\n\nNo confirmed votes.".to_string();
+              }
+         }
         let info_content = format!("{}{}", help_text_bottom, stats_text);
         
         let info_block = Paragraph::new(info_content)
