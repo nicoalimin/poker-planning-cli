@@ -74,9 +74,9 @@ fn draw_main(f: &mut Frame, app: &App) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3), // Top Bar (Status)
-                Constraint::Min(0),    // Middle (Map + Sidebar)
-                Constraint::Length(8), // Bottom (Logs/Info)
+                Constraint::Length(3),  // Top Bar (Status)
+                Constraint::Min(10),    // Middle (Map - Full Width)
+                Constraint::Length(12), // Bottom (Players + Help)
             ].as_ref())
             .split(f.area());
             
@@ -96,35 +96,21 @@ fn draw_main(f: &mut Frame, app: &App) {
             .style(Style::default().fg(Color::Green));
         f.render_widget(status_bar, chunks[0]);
 
-        // 2. Middle Area: Map + Sidebar
-        let middle_chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Min(10), // Map
-                Constraint::Length(30), // Sidebar
-            ].as_ref())
-            .split(chunks[1]);
-
-        let map_rect = middle_chunks[0];
-        let sidebar_rect = middle_chunks[1];
-
+        // 2. Middle Area: Map (Full Width)
+        let map_rect = chunks[1];
         let map_block = Block::default().borders(Borders::ALL).title("Room");
         f.render_widget(map_block, map_rect);
         
         let inner_rect = map_rect.inner(ratatui::layout::Margin { vertical: 1, horizontal: 1 });
         
-        // Draw Zones
-        let scale_x = 2;
-        let scale_y = 1;
-        
         // Render Zones (Simplified loop based on previous reads)
         let zones = crate::zones::calculate_zones(&state.config);
         for zone in zones {
              let zone_rect = Rect {
-                 x: inner_rect.x + (zone.x * scale_x),
-                 y: inner_rect.y + (zone.y * scale_y),
-                 width: zone.width * scale_x, 
-                 height: zone.height * scale_y, 
+                 x: inner_rect.x + (zone.x * 2), // Scale x 2
+                 y: inner_rect.y + (zone.y * 1), // Scale y 1
+                 width: zone.width * 2, 
+                 height: zone.height * 1, 
              };
              
              if zone_rect.right() <= inner_rect.right() && zone_rect.bottom() <= inner_rect.bottom() {
@@ -185,6 +171,9 @@ fn draw_main(f: &mut Frame, app: &App) {
                  common::AvatarColor::White => Color::White,
              };
                  
+             let scale_x = 2;
+             let scale_y = 1;
+             
              let screen_x = inner_rect.x + (x * scale_x);
              let screen_y = inner_rect.y + (y * scale_y);
 
@@ -230,18 +219,21 @@ fn draw_main(f: &mut Frame, app: &App) {
              }
         }
         
-        // Sidebar (Players + Help)
-        let sidebar_chunks = Layout::default()
-             .direction(Direction::Vertical)
+        // 3. Bottom Section (Players + Help)
+        let bottom_chunks = Layout::default()
+             .direction(Direction::Horizontal)
              .constraints([
-                 Constraint::Min(10), // Player List
-                 Constraint::Length(10), // Help
+                 Constraint::Percentage(50), // Connected Players (Left)
+                 Constraint::Percentage(50), // Help & Info (Right)
              ].as_ref())
-             .split(sidebar_rect);
+             .split(chunks[2]);
 
-        // Player List
+        // Left: Connected Players (Sorted)
+        let mut sorted_players: Vec<_> = state.players.values().collect();
+        sorted_players.sort_by_key(|p| p.name.to_lowercase());
+
         let mut player_lines = Vec::new();
-        for p in state.players.values() {
+        for p in sorted_players {
              let p_symbol = match p.symbol {
                  common::AvatarSymbol::Human => "웃",
                  common::AvatarSymbol::Alien => "👽",
@@ -295,33 +287,15 @@ fn draw_main(f: &mut Frame, app: &App) {
         }
         let player_list = Paragraph::new(player_lines)
            .block(Block::default().borders(Borders::ALL).title("Connected Players"));
-        f.render_widget(player_list, sidebar_chunks[0]);
-        
-        // Help
-        let help_text = vec![
-            Line::from("Controls:"),
-            Line::from("Arrows: Move"),
-            Line::from("1-8: Vote"),
-            Line::from("R: Reveal (SM)"),
-            Line::from("C: Clear (SM)"),
-            Line::from("Q: Quit"),
-        ];
-         let help_block = Paragraph::new(help_text)
-           .block(Block::default().borders(Borders::ALL).title("Help"))
-           .style(Style::default().fg(Color::Gray));
-        f.render_widget(help_block, sidebar_chunks[1]);
-        
-        // 3. Bottom Area (Logs/Info)
-        
+        f.render_widget(player_list, bottom_chunks[0]);
+
+        // Right: Help & Info
         let help_text_bottom = match state.phase {
-            Phase::Voting { .. } => "VOTING ACTIVE! Move to area or Press 1, 2, 3, 5, 8 to vote.",
-            Phase::Revealed => {
-                 "VOTING CLOSED. Check stats."
-            },
+            Phase::Voting { .. } => "VOTING ACTIVE!\nMove to area or Press 1, 2, 3, 5, 8 to vote.",
+            Phase::Revealed => "VOTING CLOSED.\nCheck stats below.",
             Phase::Idle => "Waiting for Scrum Master.",
         };
         
-        // If Revealed, show stats
         let mut stats_text = String::new();
         if let Phase::Revealed = state.phase {
              let votes: Vec<u32> = state.votes.values().filter_map(|v| *v).collect();
@@ -331,26 +305,24 @@ fn draw_main(f: &mut Frame, app: &App) {
                  let avg = sum as f32 / count as f32;
                  let min = votes.iter().min().unwrap();
                  let max = votes.iter().max().unwrap();
-                 stats_text = format!("Count: {} | Avg: {:.1} | Min: {} | Max: {}", count, avg, min, max);
+                 stats_text = format!("\n\nStats:\nCount: {}\nAvg: {:.1}\nMin: {}\nMax: {}", count, avg, min, max);
              } else {
-                 stats_text = "No votes cast.".to_string();
+                 stats_text = "\n\nNo votes cast.".to_string();
              }
         }
 
-        let bottom_text = format!("{}\n{}", help_text_bottom, stats_text);
-        
-        let bottom_chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
-            .split(chunks[2]);
-            
-        let bottom = Paragraph::new(bottom_text)
-            .block(Block::default().borders(Borders::ALL).title("Info"));
-        f.render_widget(bottom, bottom_chunks[0]);
-        
-        // let logs_text = app.logs.join("\n");
-        // let logs = Paragraph::new(logs_text)
-        //     .block(Block::default().borders(Borders::ALL).title("Logs"));
-        // f.render_widget(logs, bottom_chunks[1]);
+        let help_lines = vec![
+            Line::from(Span::styled("Info:", Style::default().add_modifier(Modifier::BOLD))),
+            Line::from(help_text_bottom),
+            Line::from(stats_text),
+            Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
+            Line::from("Arrows: Move | R: Reveal (ScrumMaster) | C: Clear (ScrumMaster) | Q: Quit"),
+            Line::from(""), // Spacer
+        ];
+
+         let help_block = Paragraph::new(help_lines)
+           .block(Block::default().borders(Borders::ALL).title("Help & Info"))
+           .style(Style::default().fg(Color::Gray));
+        f.render_widget(help_block, bottom_chunks[1]);
     }
 }
