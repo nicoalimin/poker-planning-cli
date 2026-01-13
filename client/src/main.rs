@@ -143,9 +143,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_x = x.saturating_sub(1);
-                                    let msg = ClientPayload::Move { x: new_x, y };
-                                    net.tx.send(serde_json::to_string(&msg)?)?;
-                                    check_zone_vote(new_x, y, &app.game_state, net); // Check zone
+                                    if new_x >= 0 { // Boundary Check
+                                        let msg = ClientPayload::Move { x: new_x, y };
+                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        check_zone_vote(new_x, y, &app.game_state, net);
+                                    }
                                 }
                             }
                             KeyCode::Right => {
@@ -156,9 +158,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_x = x + 1;
-                                    let msg = ClientPayload::Move { x: new_x, y };
-                                    net.tx.send(serde_json::to_string(&msg)?)?;
-                                    check_zone_vote(new_x, y, &app.game_state, net); // Check zone
+                                    if new_x <= 40 { // Hardcoded Width Boundary
+                                        let msg = ClientPayload::Move { x: new_x, y };
+                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        check_zone_vote(new_x, y, &app.game_state, net);
+                                    }
                                 }
                             }
                              KeyCode::Up => {
@@ -169,9 +173,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_y = y.saturating_sub(1);
-                                    let msg = ClientPayload::Move { x, y: new_y };
-                                    net.tx.send(serde_json::to_string(&msg)?)?;
-                                    check_zone_vote(x, new_y, &app.game_state, net); // Check zone
+                                    if new_y >= 0 { // Boundary Check
+                                        let msg = ClientPayload::Move { x, y: new_y };
+                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        check_zone_vote(x, new_y, &app.game_state, net);
+                                    }
                                 }
                             }
                              KeyCode::Down => {
@@ -182,9 +188,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_y = y + 1;
-                                    let msg = ClientPayload::Move { x, y: new_y };
-                                    net.tx.send(serde_json::to_string(&msg)?)?;
-                                    check_zone_vote(x, new_y, &app.game_state, net); // Check zone
+                                    if new_y <= 20 { // Hardcoded Height Boundary
+                                        let msg = ClientPayload::Move { x, y: new_y };
+                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        check_zone_vote(x, new_y, &app.game_state, net);
+                                    }
                                 }
                             }
                             // Voting hotkeys (temporary)

@@ -23,13 +23,12 @@ fn draw_login(f: &mut Frame, app: &App) {
         .margin(2)
         .constraints(
             [
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(3),
+                Constraint::Length(3), // Title
+                Constraint::Length(3), // Name Input
+                Constraint::Length(3), // Role
                 Constraint::Length(3), // Color
                 Constraint::Length(3), // Symbol
+                Constraint::Length(3), // Info
                 Constraint::Min(0),
             ]
             .as_ref(),
@@ -46,6 +45,11 @@ fn draw_login(f: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::Yellow))
         .block(Block::default().borders(Borders::ALL).title("Enter Name"));
     f.render_widget(input, chunks[1]);
+    
+    // Set Cursor
+    f.set_cursor_position(
+        (chunks[1].x + 1 + app.name_input.visual_cursor() as u16, chunks[1].y + 1)
+    );
     
     let role_text = format!("Role: {:?} (Press TAB)", app.role_input);
     let role = Paragraph::new(role_text)
@@ -101,7 +105,7 @@ fn draw_main(f: &mut Frame, app: &App) {
         let inner_rect = map_rect.inner(ratatui::layout::Margin { vertical: 1, horizontal: 1 });
         
         // Draw Zones
-        let scale_x = 4;
+        let scale_x = 3;
         let scale_y = 2;
         
         let zones = crate::zones::calculate_zones(&state.config);
@@ -169,8 +173,9 @@ fn draw_main(f: &mut Frame, app: &App) {
                  // Scale factor check: map (x,y) to screen space?
                  // For now, let's keep 1:1 coordinate but draw a bigger box centered-ish?
                  // OR scale coordinates: screen_x = x * 4, screen_y = y * 2
+                 // OR scale coordinates: screen_x = x * 4, screen_y = y * 2
                  // This makes the world "bigger".
-                 let scale_x = 4;
+                 let scale_x = 3;
                  let scale_y = 2;
                  
                  let screen_x = inner_rect.x + (x * scale_x);
@@ -213,7 +218,7 @@ fn draw_main(f: &mut Frame, app: &App) {
                         f.render_widget(paragraph, area);
                         // Name label above?
                         if screen_y > inner_rect.y {
-                             let name_area = Rect { x: screen_x, y: screen_y - 1, width: (player.name.len() as u16).max(4), height: 1 };
+                             let name_area = Rect { x: screen_x, y: screen_y - 1, width: (player.name.len() as u16).max(3), height: 1 };
                              if name_area.right() <= inner_rect.right() {
                                 f.render_widget(Paragraph::new(player.name.as_str()).style(Style::default().fg(Color::White)), name_area);
                              }
