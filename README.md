@@ -29,10 +29,21 @@ You can download the latest client binary using the provided script:
 ./install.sh
 ```
 
-Or manually:
+Or manually download the binary for your platform:
 
 ```bash
-curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/client
+# macOS (Apple Silicon)
+curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-macos-arm64
+
+# Linux (x64)
+curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-linux-x64
+
+# Windows (x64) - use PowerShell or download from browser
+curl -L -o client.exe https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-windows-x64.exe
+```
+
+Then make it executable (macOS/Linux only):
+```bash
 chmod +x client
 ```
 
