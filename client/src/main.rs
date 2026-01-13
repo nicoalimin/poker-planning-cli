@@ -38,6 +38,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         terminal.draw(|f| ui::ui(f, &app))?;
+        
+        // Calculate dynamic boundaries based on terminal size
+        // Layout duplicate logic:
+        // Top status (3) + Bottom (5) ... wait, ui.rs constraints says:
+        /*
+            Constraint::Length(3), // Status
+            Constraint::Min(10), // Map
+            Constraint::Length(5), // Bottom
+        */
+        // Margin 2
+        
+        let size = terminal.size()?;
+        if size.width > 4 && size.height > 10 { // Minimal check
+             let available_width = size.width.saturating_sub(4); // Margin 2 either side
+             // Inner map also has margin 1 either side -> total -2
+             let map_inner_width = available_width.saturating_sub(2);
+             
+             let available_height = size.height.saturating_sub(4); // Margin 2 top/bottom
+             let map_height = available_height.saturating_sub(3 + 5); // Status + Bottom
+             // Inner map margin 1 top/bottom
+             let map_inner_height = map_height.saturating_sub(2);
+             
+             // Scale 3x2
+             app.grid_width = map_inner_width / 3;
+             app.grid_height = map_inner_height / 2;
+        }
 
         // Poll for events. NOTE: Blocking poll is tricky with async networking.
         // We should use `crossterm::event::EventStream` or verify poll non-blocking.
@@ -158,7 +184,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_x = x + 1;
-                                    if new_x <= 40 { // Hardcoded Width Boundary
+                                    if new_x < app.grid_width { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x: new_x, y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(new_x, y, &app.game_state, net);
@@ -188,7 +214,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }).unwrap_or((10,10));
                                     
                                     let new_y = y + 1;
-                                    if new_y <= 20 { // Hardcoded Height Boundary
+                                    if new_y < app.grid_height { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x, y: new_y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(x, new_y, &app.game_state, net);

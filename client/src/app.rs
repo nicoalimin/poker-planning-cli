@@ -23,6 +23,10 @@ pub struct App {
     
     // Logs
     pub logs: Vec<String>,
+    
+    // Limits
+    pub grid_width: u16,
+    pub grid_height: u16,
 }
 
 impl App {
@@ -38,6 +42,8 @@ impl App {
             self_id: None,
             last_known_pos: (10, 10),
             logs: Vec::new(),
+            grid_width: 40, // Default fallback
+            grid_height: 20, 
         }
     }
     
