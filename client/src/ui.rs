@@ -219,16 +219,17 @@ fn draw_main(f: &mut Frame, app: &App) {
              }
         }
         
-        // 3. Bottom Section (Players + Help)
+        // 3. Bottom Section (Players + Help + Info)
         let bottom_chunks = Layout::default()
              .direction(Direction::Horizontal)
              .constraints([
-                 Constraint::Percentage(50), // Connected Players (Left)
-                 Constraint::Percentage(50), // Help & Info (Right)
+                 Constraint::Percentage(33), // Connected Players (Left)
+                 Constraint::Percentage(33), // Help (Middle)
+                 Constraint::Percentage(34), // Info (Right)
              ].as_ref())
              .split(chunks[2]);
 
-        // Left: Connected Players (Sorted)
+        // Column 1: Connected Players (Sorted)
         let mut sorted_players: Vec<_> = state.players.values().collect();
         sorted_players.sort_by_key(|p| p.name.to_lowercase());
 
@@ -289,13 +290,28 @@ fn draw_main(f: &mut Frame, app: &App) {
            .block(Block::default().borders(Borders::ALL).title("Connected Players"));
         f.render_widget(player_list, bottom_chunks[0]);
 
-        // Right: Help & Info
+        // Column 2: Help (Controls)
+        let help_lines = vec![
+            Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
+            Line::from("Arrows: Move"),
+            Line::from("R: Reveal (SM)"),
+            Line::from("C: Clear (SM)"),
+            Line::from("Q: Quit"),
+        ];
+
+         let help_block = Paragraph::new(help_lines)
+           .block(Block::default().borders(Borders::ALL).title("Help"))
+           .style(Style::default().fg(Color::Gray));
+        f.render_widget(help_block, bottom_chunks[1]);
+        
+        // Column 3: Info (Phase & Stats)
         let help_text_bottom = match state.phase {
-            Phase::Voting { .. } => "VOTING ACTIVE!\nMove to area or Press 1, 2, 3, 5, 8 to vote.",
-            Phase::Revealed => "VOTING CLOSED.\nCheck stats below.",
+            Phase::Voting { .. } => "VOTING ACTIVE!\nMove to area to vote.",
+            Phase::Revealed => "VOTING CLOSED.",
             Phase::Idle => "Waiting for Scrum Master.",
         };
         
+        // If Revealed, show stats
         let mut stats_text = String::new();
         if let Phase::Revealed = state.phase {
              let votes: Vec<u32> = state.votes.values().filter_map(|v| *v).collect();
@@ -310,19 +326,10 @@ fn draw_main(f: &mut Frame, app: &App) {
                  stats_text = "\n\nNo votes cast.".to_string();
              }
         }
-
-        let help_lines = vec![
-            Line::from(Span::styled("Info:", Style::default().add_modifier(Modifier::BOLD))),
-            Line::from(help_text_bottom),
-            Line::from(stats_text),
-            Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
-            Line::from("Arrows: Move | R: Reveal (ScrumMaster) | C: Clear (ScrumMaster) | Q: Quit"),
-            Line::from(""), // Spacer
-        ];
-
-         let help_block = Paragraph::new(help_lines)
-           .block(Block::default().borders(Borders::ALL).title("Help & Info"))
-           .style(Style::default().fg(Color::Gray));
-        f.render_widget(help_block, bottom_chunks[1]);
+        let info_content = format!("{}{}", help_text_bottom, stats_text);
+        
+        let info_block = Paragraph::new(info_content)
+            .block(Block::default().borders(Borders::ALL).title("Info"));
+        f.render_widget(info_block, bottom_chunks[2]);
     }
 }

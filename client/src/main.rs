@@ -214,15 +214,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     }
                                 }
                             }
-                            // Voting hotkeys (temporary)
-                            KeyCode::Char('1') => { app.log("Voted 1".to_string()); send_vote(&network, Some(1)) },
-                            KeyCode::Char('2') => { app.log("Voted 2".to_string()); send_vote(&network, Some(2)) },
-                            KeyCode::Char('3') => { app.log("Voted 3".to_string()); send_vote(&network, Some(3)) },
-                            KeyCode::Char('5') => { app.log("Voted 5".to_string()); send_vote(&network, Some(5)) },
-                            KeyCode::Char('8') => { app.log("Voted 8".to_string()); send_vote(&network, Some(8)) },
+                             // Voting hotkeys (removed)
                              // Admin commands
-                            KeyCode::Char('s') => { // Start
-                                 app.log("Admin: Start Vote".to_string());
+                            KeyCode::Char('c') => { // Start
+                                 app.log("Admin: Clear Vote".to_string());
                                  let cmd = common::AdminCommand::StartVote { ticket: None, timeout: Some(20) };
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
