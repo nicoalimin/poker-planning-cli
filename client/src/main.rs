@@ -229,8 +229,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                              },
                              // Voting hotkeys (removed)
                              // Admin commands
-                            KeyCode::Char('c') => { // Start
-                                 app.log("Admin: Cleargs Vote".to_string());
+                            KeyCode::Char('s') => { // Start
+                                 app.log("Admin: Start/Stop Vote".to_string());
                                  let cmd = common::AdminCommand::StartVote { ticket: None, timeout: Some(20) };
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;

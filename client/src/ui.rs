@@ -329,8 +329,8 @@ fn draw_main(f: &mut Frame, app: &App) {
             Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
             Line::from("Arrows: Move"),
             Line::from("Space: Confirm Vote"),
-            Line::from("R: Reveal (SM)"),
-            Line::from("C: Clear (SM)"),
+            Line::from("R: Reveal (ScrumMaster)"),
+            Line::from("S: Start/Stop (ScrumMaster)"),
             Line::from("Q: Quit"),
         ];
 
