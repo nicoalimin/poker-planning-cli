@@ -86,10 +86,11 @@ fn draw_main(f: &mut Frame, app: &App) {
             Phase::Voting { .. } => "VOTING",
             Phase::Revealed => "REVEALED",
         };
-        let status_text = format!("Phase: {} | Ticket: {:?} | Players: {}", 
-            phase_str, 
-            state.current_ticket.as_ref().map(|t| t.title.as_str()).unwrap_or("None"),
-            state.players.len()
+        let status_text = format!(
+            "Phase: {:?} | Ticket: {} | Self: {}", 
+            state.phase, 
+            state.current_ticket.as_ref().map(|t| t.title.clone()).unwrap_or("None".to_string()),
+            app.self_id.unwrap_or_default()
         );
         let status_bar = Paragraph::new(status_text)
             .block(Block::default().borders(Borders::ALL).title("Status"))
@@ -219,21 +220,20 @@ fn draw_main(f: &mut Frame, app: &App) {
              };
              
              if area.right() <= inner_rect.right() && area.bottom() <= inner_rect.bottom() {
-                let block_type = if Some(player.id) == app.self_id {
-                    Borders::ALL
-                } else {
-                    Borders::NONE
-                };
-                
-                 let paragraph = Paragraph::new(symbol)
-                    .block(Block::default().borders(block_type))
-                    .style(Style::default().bg(color).fg(Color::Black).add_modifier(Modifier::BOLD))
-                    .alignment(Alignment::Center);
-                    
-                 let can_see = if let Phase::Voting { .. } = state.phase {
-                     Some(player.id) == app.self_id
-                 } else {
-                     true
+                 // Borders::ALL on 1-height rect fails to render content. Use NONE for now.
+                 // Self distinction can be done via style if needed, but visibility is priority.
+                 let block_type = Borders::NONE;
+                 
+                  let paragraph = Paragraph::new(symbol)
+                     .block(Block::default().borders(block_type))
+                     .style(Style::default().bg(color).fg(Color::Black).add_modifier(Modifier::BOLD))
+                     .alignment(Alignment::Center);
+                 
+                 // Explicitly check for self
+                 let is_me = app.self_id.map_or(false, |id| id == player.id);
+                 let can_see = match state.phase {
+                     Phase::Voting { .. } => is_me,
+                     _ => true,
                  };
 
                  if can_see {
