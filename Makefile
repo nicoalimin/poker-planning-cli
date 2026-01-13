@@ -11,6 +11,9 @@ TARGET_LINUX = x86_64-unknown-linux-musl
 
 # Output directory
 DIST_DIR = dist
+# Linux Builder
+LINUX_BUILDER = docker run --platform linux/amd64 --rm -v "$(shell pwd)":/home/rust/src -e CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=/usr/local/musl/bin/x86_64-unknown-linux-musl-gcc messense/rust-musl-cross:x86_64-musl
+
 
 # Build all targets
 .PHONY: all
@@ -44,7 +47,7 @@ build-windows: $(DIST_DIR)
 # Build for Linux (x86_64-unknown-linux-musl)
 .PHONY: build-linux
 build-linux: $(DIST_DIR)
-	cargo build --release --target $(TARGET_LINUX)
+	$(LINUX_BUILDER) cargo build --release --target $(TARGET_LINUX)
 	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(CLIENT_BIN)-linux-x64
 	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(SERVER_BIN)-linux-x64
 
@@ -53,7 +56,7 @@ build-linux: $(DIST_DIR)
 client-all: $(DIST_DIR)
 	cargo build --release --package client --target $(TARGET_MACOS_ARM)
 	cargo build --release --package client --target $(TARGET_WINDOWS)
-	cargo build --release --package client --target $(TARGET_LINUX)
+	$(LINUX_BUILDER) cargo build --release --package client --target $(TARGET_LINUX)
 	cp target/$(TARGET_MACOS_ARM)/release/client $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64
 	cp target/$(TARGET_WINDOWS)/release/client.exe $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe
 	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(CLIENT_BIN)-linux-x64
@@ -63,7 +66,7 @@ client-all: $(DIST_DIR)
 server-all: $(DIST_DIR)
 	cargo build --release --package server --target $(TARGET_MACOS_ARM)
 	cargo build --release --package server --target $(TARGET_WINDOWS)
-	cargo build --release --package server --target $(TARGET_LINUX)
+	$(LINUX_BUILDER) cargo build --release --package server --target $(TARGET_LINUX)
 	cp target/$(TARGET_MACOS_ARM)/release/server $(DIST_DIR)/$(SERVER_BIN)-macos-arm64
 	cp target/$(TARGET_WINDOWS)/release/server.exe $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe
 	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(SERVER_BIN)-linux-x64
