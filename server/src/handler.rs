@@ -10,13 +10,15 @@ pub async fn handle_message(player_id: Uuid, payload: ClientPayload, state: &Sha
         let mut locked_state = state.lock().unwrap();
         
         match payload {
-            ClientPayload::Login { name, role } => {
+            ClientPayload::Login { name, role, color, symbol } => {
                 // Add player
                 let player = Player {
                     id: player_id,
                     name,
                     role,
                     position: (10, 10), // Default start pos
+                    color,
+                    symbol,
                 };
                 locked_state.game_state.players.insert(player_id, player);
                 locked_state.add_client(player_id, tx.clone());

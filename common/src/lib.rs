@@ -10,12 +10,32 @@ pub enum Role {
     Observer,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum AvatarColor {
+    Red,
+    Green,
+    Blue,
+    Yellow,
+    Magenta,
+    Cyan,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum AvatarSymbol {
+    Human,
+    Alien,
+    Robot,
+    Ghost,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Player {
     pub id: Uuid,
     pub name: String,
     pub role: Role,
     pub position: (u16, u16),
+    pub color: AvatarColor,
+    pub symbol: AvatarSymbol,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,7 +81,7 @@ impl Default for VotingConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ClientPayload {
-    Login { name: String, role: Role },
+    Login { name: String, role: Role, color: AvatarColor, symbol: AvatarSymbol },
     Move { x: u16, y: u16 },
     Vote { value: Option<u32> },
     Admin(AdminCommand),

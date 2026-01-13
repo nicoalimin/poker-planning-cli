@@ -19,6 +19,7 @@ use tui_input::backend::crossterm::EventHandler;
 mod app;
 mod network;
 mod ui; // We will implement UI in a separate file too, or keep it simple here? 
+mod zones;
 // Let's create ui.rs for the draw functions
 use app::{App, CurrentScreen};
 use network::Network;
@@ -50,15 +51,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                  if let Ok(payload) = serde_json::from_str::<ServerPayload>(&msg) {
                      match payload {
                          ServerPayload::Welcome { self_id, state } => {
+                             app.log("Connected to server".to_string());
                              app.self_id = Some(self_id);
                              app.game_state = Some(state);
                              app.current_screen = CurrentScreen::Main;
                          },
                          ServerPayload::StateUpdate(state) => {
+                             // app.log("State updated".to_string()); // Too spammy?
                              app.game_state = Some(state);
                          },
                          ServerPayload::Error(e) => {
-                             // Show error?
+                             app.log(format!("Server Error: {}", e));
                          }
                      }
                  }
@@ -79,7 +82,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         let login = ClientPayload::Login {
                                             name: app.name_input.value().to_string(),
                                             role: app.role_input.clone(),
+                                            color: app.color_input.clone(),
+                                            symbol: app.symbol_input.clone(),
                                         };
+                                        app.log(format!("Logging in as {} ({:?})", app.name_input.value(), app.role_input));
                                         let json = serde_json::to_string(&login)?;
                                         net.tx.send(json)?;
                                         network = Some(net);
@@ -100,6 +106,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     Role::Observer => Role::Participant,
                                 };
                             }
+                            KeyCode::F(1) => {
+                                app.color_input = match app.color_input {
+                                    common::AvatarColor::Red => common::AvatarColor::Green,
+                                    common::AvatarColor::Green => common::AvatarColor::Blue,
+                                    common::AvatarColor::Blue => common::AvatarColor::Yellow,
+                                    common::AvatarColor::Yellow => common::AvatarColor::Magenta,
+                                    common::AvatarColor::Magenta => common::AvatarColor::Cyan,
+                                    common::AvatarColor::Cyan => common::AvatarColor::Red,
+                                };
+                            }
+                            KeyCode::F(2) => {
+                                app.symbol_input = match app.symbol_input {
+                                    common::AvatarSymbol::Human => common::AvatarSymbol::Alien,
+                                    common::AvatarSymbol::Alien => common::AvatarSymbol::Robot,
+                                    common::AvatarSymbol::Robot => common::AvatarSymbol::Ghost,
+                                    common::AvatarSymbol::Ghost => common::AvatarSymbol::Human,
+                                };
+                            }
                             _ => {
                                 // Input name
                                 app.name_input.handle_event(&Event::Key(key));
@@ -109,9 +133,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     CurrentScreen::Main => {
                         // Main game inputs
                          match key.code {
-                            KeyCode::Esc => break,
-                            KeyCode::Char('q') => break,
+                            KeyCode::Esc => { app.log("Quit".to_string()); break; },
+                            KeyCode::Char('q') => { app.log("Quit".to_string()); break; },
                             KeyCode::Left => {
+                                app.log("Pressed Left".to_string());
                                 if let Some(net) = &network {
                                     let (x,y) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
@@ -120,9 +145,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_x = x.saturating_sub(1);
                                     let msg = ClientPayload::Move { x: new_x, y };
                                     net.tx.send(serde_json::to_string(&msg)?)?;
+                                    check_zone_vote(new_x, y, &app.game_state, net); // Check zone
                                 }
                             }
                             KeyCode::Right => {
+                                app.log("Pressed Right".to_string());
                                 if let Some(net) = &network {
                                      let (x,y) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
@@ -131,9 +158,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_x = x + 1;
                                     let msg = ClientPayload::Move { x: new_x, y };
                                     net.tx.send(serde_json::to_string(&msg)?)?;
+                                    check_zone_vote(new_x, y, &app.game_state, net); // Check zone
                                 }
                             }
                              KeyCode::Up => {
+                                app.log("Pressed Up".to_string());
                                 if let Some(net) = &network {
                                      let (x,y) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
@@ -142,9 +171,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_y = y.saturating_sub(1);
                                     let msg = ClientPayload::Move { x, y: new_y };
                                     net.tx.send(serde_json::to_string(&msg)?)?;
+                                    check_zone_vote(x, new_y, &app.game_state, net); // Check zone
                                 }
                             }
                              KeyCode::Down => {
+                                app.log("Pressed Down".to_string());
                                 if let Some(net) = &network {
                                      let (x,y) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
@@ -153,28 +184,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_y = y + 1;
                                     let msg = ClientPayload::Move { x, y: new_y };
                                     net.tx.send(serde_json::to_string(&msg)?)?;
+                                    check_zone_vote(x, new_y, &app.game_state, net); // Check zone
                                 }
                             }
                             // Voting hotkeys (temporary)
-                            KeyCode::Char('1') => send_vote(&network, Some(1)),
-                            KeyCode::Char('2') => send_vote(&network, Some(2)),
-                            KeyCode::Char('3') => send_vote(&network, Some(3)),
-                            KeyCode::Char('5') => send_vote(&network, Some(5)),
-                            KeyCode::Char('8') => send_vote(&network, Some(8)),
+                            KeyCode::Char('1') => { app.log("Voted 1".to_string()); send_vote(&network, Some(1)) },
+                            KeyCode::Char('2') => { app.log("Voted 2".to_string()); send_vote(&network, Some(2)) },
+                            KeyCode::Char('3') => { app.log("Voted 3".to_string()); send_vote(&network, Some(3)) },
+                            KeyCode::Char('5') => { app.log("Voted 5".to_string()); send_vote(&network, Some(5)) },
+                            KeyCode::Char('8') => { app.log("Voted 8".to_string()); send_vote(&network, Some(8)) },
                              // Admin commands
                             KeyCode::Char('s') => { // Start
+                                 app.log("Admin: Start Vote".to_string());
                                  let cmd = common::AdminCommand::StartVote { ticket: None, timeout: Some(20) };
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
                                  }
                             },
                              KeyCode::Char('r') => { // Reveal
+                                 app.log("Admin: Reveal".to_string());
                                  let cmd = common::AdminCommand::Reveal;
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
                                  }
                             },
                              KeyCode::Char('0') => { // Reset
+                                 app.log("Admin: Reset".to_string());
                                  let cmd = common::AdminCommand::Reset;
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
@@ -201,4 +236,34 @@ fn send_vote(network: &Option<Network>, val: Option<u32>) {
          let msg = ClientPayload::Vote { value: val };
          let _ = net.tx.send(serde_json::to_string(&msg).unwrap());
      }
+}
+
+fn check_zone_vote(x: u16, y: u16, state: &Option<common::GameState>, net: &Network) {
+    if let Some(s) = state {
+        let zones = crate::zones::calculate_zones(&s.config);
+        for zone in zones {
+             if x >= zone.x && x < zone.x + zone.width && y >= zone.y && y < zone.y + zone.height {
+                 // In zone, vote!
+                 let msg = ClientPayload::Vote { value: Some(zone.value) };
+                 let _ = net.tx.send(serde_json::to_string(&msg).unwrap());
+                 return;
+             }
+        }
+        // If not in any zone, maybe unvote? 
+        // "Reset the state... pull everyone back".
+        // Let's imply leaving zone = keep vote? Or unvote?
+        // Prompt: "can vote... change their vote".
+        // Usually spatial means if I leave, I haven't voted.
+        // But let's stick to explicit vote for now to be safe, or unvote if outside?
+        // Let's Unvote if outside all zones?
+        // "until every participant has answered".
+        // If I walk out, did I withdraw my answer?
+        // Let's implement unvote if outside all zones.
+        
+        // Check if we WERE in a zone (to avoid spamming unvote).
+        // Too complex for stateless check.
+        // Just send Unvote (None) if not in zone.
+        let msg = ClientPayload::Vote { value: None };
+        let _ = net.tx.send(serde_json::to_string(&msg).unwrap());
+    }
 }

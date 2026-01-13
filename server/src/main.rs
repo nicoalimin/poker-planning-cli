@@ -67,6 +67,8 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
     // 3. Server adds to state.
     // 4. Server sends Welcome + State.
     
+    println!("New connection from {}", addr);
+
     // Wait for Login
     let player_id = Uuid::new_v4();
     
@@ -80,6 +82,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
             let json = serde_json::to_string(&msg).unwrap();
             if let Err(e) = stream_tx.send(json).await {
                 // Client disconnected or error
+                println!("Client {} send error (disconnected?)", addr);
                 break;
             }
         }
@@ -106,6 +109,7 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
 
     // Cleanup
     {
+        println!("Client {} cleaning up", addr);
         let mut locked_state = state.lock().unwrap();
         locked_state.remove_client(player_id);
         locked_state.broadcast_state();
