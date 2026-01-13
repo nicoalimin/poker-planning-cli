@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
              
              // Scale 3x2
              app.grid_width = map_inner_width / 3;
-             app.grid_height = map_inner_height / 2;
+             app.grid_height = map_inner_height - 1;
         }
 
         // Poll for events. NOTE: Blocking poll is tricky with async networking.
