@@ -23,10 +23,10 @@ aws ssm start-session \
 *Note: Requires AWS CLI and Session Manager plugin.*
 
 ### 2. Install Client
-You can download the latest client binary using the provided script:
+You can download the latest client binary using the install script (auto-detects your platform):
 
 ```bash
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/nicoalimin/poker-planning-cli/main/install.sh | bash
 ```
 
 Or manually download the binary for your platform:
