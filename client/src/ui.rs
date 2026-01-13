@@ -104,6 +104,11 @@ fn draw_main(f: &mut Frame, app: &App) {
         let inner_rect = map_rect.inner(ratatui::layout::Margin { vertical: 1, horizontal: 1 });
         
         // Render Zones (Simplified loop based on previous reads)
+        // Calculate pulse for unconfirmed zones
+        // SystemTime might be jittery, frame-based is better if we had it in App, but simple time works.
+        let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let pulse = (timestamp / 500) % 2 == 0; // Toggle every 500ms
+        
         let zones = crate::zones::calculate_zones(&state.config);
         for zone in zones {
              let zone_rect = Rect {
@@ -114,9 +119,38 @@ fn draw_main(f: &mut Frame, app: &App) {
              };
              
              if zone_rect.right() <= inner_rect.right() && zone_rect.bottom() <= inner_rect.bottom() {
+                 // Check if SELF player is in this zone
+                 let self_player = app.self_id.and_then(|id| state.players.get(&id));
+                 let mut is_in_zone = false;
+                 let mut is_confirmed = false;
+                 
+                 if let Some(p) = self_player {
+                     if p.position.0 >= zone.x && p.position.0 < zone.x + zone.width &&
+                        p.position.1 >= zone.y && p.position.1 < zone.y + zone.height {
+                            is_in_zone = true;
+                            is_confirmed = p.confirmed;
+                        }
+                 }
+                 
+                 let border_style = if is_in_zone {
+                     if is_confirmed {
+                         // Persistent Glow (Gold)
+                         Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                     } else {
+                         // Sporadic Glow (Pulse)
+                         if pulse {
+                              Style::default().fg(Color::Cyan)
+                         } else {
+                              Style::default().fg(Color::DarkGray)
+                         }
+                     }
+                 } else {
+                     Style::default().fg(Color::DarkGray)
+                 };
+                 
                  let block = Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::DarkGray))
+                    .border_style(border_style)
                     .title(format!(" {} ", zone.value));
                  f.render_widget(block, zone_rect);
              }
@@ -294,6 +328,7 @@ fn draw_main(f: &mut Frame, app: &App) {
         let help_lines = vec![
             Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
             Line::from("Arrows: Move"),
+            Line::from("Space: Confirm Vote"),
             Line::from("R: Reveal (SM)"),
             Line::from("C: Clear (SM)"),
             Line::from("Q: Quit"),

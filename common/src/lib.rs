@@ -114,6 +114,8 @@ pub struct Player {
     pub position: (u16, u16),
     pub color: AvatarColor,
     pub symbol: AvatarSymbol,
+    #[serde(default)] // For backward compatibility if needed, though we don't have persistence
+    pub confirmed: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -162,6 +164,7 @@ pub enum ClientPayload {
     Login { name: String, role: Role, color: AvatarColor, symbol: AvatarSymbol },
     Move { x: u16, y: u16 },
     Vote { value: Option<u32> },
+    VoteConfirm { confirmed: bool },
     Admin(AdminCommand),
 }
 

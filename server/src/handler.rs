@@ -19,6 +19,7 @@ pub async fn handle_message(player_id: Uuid, payload: ClientPayload, state: &Sha
                     position: (2, 2), // Top-left start pos
                     color,
                     symbol,
+                    confirmed: false,
                 };
                 locked_state.game_state.players.insert(player_id, player);
                 locked_state.add_client(player_id, tx.clone());
@@ -47,6 +48,12 @@ pub async fn handle_message(player_id: Uuid, payload: ClientPayload, state: &Sha
                 if let Phase::Voting { .. } = locked_state.game_state.phase {
                      locked_state.game_state.votes.insert(player_id, value);
                      broadcast_needed = true;
+                }
+            },
+            ClientPayload::VoteConfirm { confirmed } => {
+                if let Some(player) = locked_state.game_state.players.get_mut(&player_id) {
+                    player.confirmed = confirmed;
+                    broadcast_needed = true;
                 }
             },
             ClientPayload::Admin(cmd) => {

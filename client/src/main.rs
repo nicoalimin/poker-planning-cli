@@ -157,11 +157,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             KeyCode::Left => {
                                 app.log("Pressed Left".to_string());
                                 if let Some(net) = &network {
-                                    let (x,y) = app.game_state.as_ref().map(|s| {
-                                        s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
-                                    }).unwrap_or((10,10));
+                                     let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
+                                    }).unwrap_or((10,10, false));
                                     
-                                    if x > 0 { 
+                                    if !confirmed && x > 0 { 
                                         let new_x = x - 1;
                                         let msg = ClientPayload::Move { x: new_x, y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
@@ -172,12 +172,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             KeyCode::Right => {
                                 app.log("Pressed Right".to_string());
                                 if let Some(net) = &network {
-                                     let (x,y) = app.game_state.as_ref().map(|s| {
-                                        s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
-                                    }).unwrap_or((10,10));
+                                     let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
+                                    }).unwrap_or((10,10, false));
                                     
                                     let new_x = x + 1;
-                                    if new_x < app.grid_width { // Dynamic Boundary
+                                    if !confirmed && new_x < app.grid_width { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x: new_x, y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(new_x, y, &app.game_state, net);
@@ -187,11 +187,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                              KeyCode::Up => {
                                 app.log("Pressed Up".to_string());
                                 if let Some(net) = &network {
-                                     let (x,y) = app.game_state.as_ref().map(|s| {
-                                        s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
-                                    }).unwrap_or((10,10));
+                                     let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
+                                    }).unwrap_or((10,10, false));
                                     
-                                    if y > 0 { 
+                                    if !confirmed && y > 0 { 
                                         let new_y = y - 1;
                                         let msg = ClientPayload::Move { x, y: new_y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
@@ -202,22 +202,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                              KeyCode::Down => {
                                 app.log("Pressed Down".to_string());
                                 if let Some(net) = &network {
-                                     let (x,y) = app.game_state.as_ref().map(|s| {
-                                        s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
-                                    }).unwrap_or((10,10));
+                                     let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
+                                    }).unwrap_or((10,10, false));
                                     
                                     let new_y = y + 1;
-                                    if new_y < app.grid_height { // Dynamic Boundary
+                                    if !confirmed && new_y < app.grid_height { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x, y: new_y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(x, new_y, &app.game_state, net);
                                     }
                                 }
                             }
+                             // Vote Confirmation
+                             KeyCode::Char(' ') => {
+                                 if let Some(net) = &network {
+                                     let confirmed = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| p.confirmed).unwrap_or(false)
+                                    }).unwrap_or(false);
+                                    
+                                    let new_confirmed = !confirmed;
+                                    app.log(format!("Toggled confirmed: {}", new_confirmed));
+                                    let msg = ClientPayload::VoteConfirm { confirmed: new_confirmed };
+                                    net.tx.send(serde_json::to_string(&msg)?)?;
+                                 }
+                             },
                              // Voting hotkeys (removed)
                              // Admin commands
                             KeyCode::Char('c') => { // Start
-                                 app.log("Admin: Clear Vote".to_string());
+                                 app.log("Admin: Cleargs Vote".to_string());
                                  let cmd = common::AdminCommand::StartVote { ticket: None, timeout: Some(20) };
                                  if let Some(net) = &network {
                                      net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
