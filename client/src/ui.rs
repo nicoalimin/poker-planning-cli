@@ -6,7 +6,7 @@ use ratatui::{
     text::{Line, Span},
 };
 use crate::app::{App, CurrentScreen};
-use common::{Role, Phase};
+use common::Phase;
 // use uuid::Uuid; // Unused
 
 pub fn ui(f: &mut Frame, app: &App) {
@@ -230,15 +230,10 @@ fn draw_main(f: &mut Frame, app: &App) {
                     .style(Style::default().bg(color).fg(Color::Black).add_modifier(Modifier::BOLD))
                     .alignment(Alignment::Center);
                     
-                 let can_see = match app.role_input {
-                     Role::ScrumMaster => true,
-                     _ => {
-                         if let Phase::Voting { .. } = state.phase {
-                             Some(player.id) == app.self_id
-                         } else {
-                             true
-                         }
-                     }
+                 let can_see = if let Phase::Voting { .. } = state.phase {
+                     Some(player.id) == app.self_id
+                 } else {
+                     true
                  };
 
                  if can_see {
