@@ -25,30 +25,28 @@ setup:
 
 # Create distribution directory
 $(DIST_DIR):
-	mkdir -p $(DIST_DIR)/$(TARGET_MACOS_ARM)
-	mkdir -p $(DIST_DIR)/$(TARGET_WINDOWS)
-	mkdir -p $(DIST_DIR)/$(TARGET_LINUX)
+	mkdir -p $(DIST_DIR)
 
 # Build for macOS ARM (aarch64-apple-darwin)
 .PHONY: build-macos-arm
 build-macos-arm: $(DIST_DIR)
 	cargo build --release --target $(TARGET_MACOS_ARM)
-	cp target/$(TARGET_MACOS_ARM)/release/client $(DIST_DIR)/$(TARGET_MACOS_ARM)/$(CLIENT_BIN)
-	cp target/$(TARGET_MACOS_ARM)/release/server $(DIST_DIR)/$(TARGET_MACOS_ARM)/$(SERVER_BIN)
+	cp target/$(TARGET_MACOS_ARM)/release/client $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64
+	cp target/$(TARGET_MACOS_ARM)/release/server $(DIST_DIR)/$(SERVER_BIN)-macos-arm64
 
 # Build for Windows (x86_64-pc-windows-gnu)
 .PHONY: build-windows
 build-windows: $(DIST_DIR)
 	cargo build --release --target $(TARGET_WINDOWS)
-	cp target/$(TARGET_WINDOWS)/release/client.exe $(DIST_DIR)/$(TARGET_WINDOWS)/$(CLIENT_BIN).exe
-	cp target/$(TARGET_WINDOWS)/release/server.exe $(DIST_DIR)/$(TARGET_WINDOWS)/$(SERVER_BIN).exe
+	cp target/$(TARGET_WINDOWS)/release/client.exe $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe
+	cp target/$(TARGET_WINDOWS)/release/server.exe $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe
 
 # Build for Linux (x86_64-unknown-linux-musl)
 .PHONY: build-linux
 build-linux: $(DIST_DIR)
 	cargo build --release --target $(TARGET_LINUX)
-	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(TARGET_LINUX)/$(CLIENT_BIN)
-	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(TARGET_LINUX)/$(SERVER_BIN)
+	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(CLIENT_BIN)-linux-x64
+	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(SERVER_BIN)-linux-x64
 
 # Build only client for all targets
 .PHONY: client-all
@@ -56,9 +54,9 @@ client-all: $(DIST_DIR)
 	cargo build --release --package client --target $(TARGET_MACOS_ARM)
 	cargo build --release --package client --target $(TARGET_WINDOWS)
 	cargo build --release --package client --target $(TARGET_LINUX)
-	cp target/$(TARGET_MACOS_ARM)/release/client $(DIST_DIR)/$(TARGET_MACOS_ARM)/$(CLIENT_BIN)
-	cp target/$(TARGET_WINDOWS)/release/client.exe $(DIST_DIR)/$(TARGET_WINDOWS)/$(CLIENT_BIN).exe
-	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(TARGET_LINUX)/$(CLIENT_BIN)
+	cp target/$(TARGET_MACOS_ARM)/release/client $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64
+	cp target/$(TARGET_WINDOWS)/release/client.exe $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe
+	cp target/$(TARGET_LINUX)/release/client $(DIST_DIR)/$(CLIENT_BIN)-linux-x64
 
 # Build only server for all targets
 .PHONY: server-all
@@ -66,9 +64,9 @@ server-all: $(DIST_DIR)
 	cargo build --release --package server --target $(TARGET_MACOS_ARM)
 	cargo build --release --package server --target $(TARGET_WINDOWS)
 	cargo build --release --package server --target $(TARGET_LINUX)
-	cp target/$(TARGET_MACOS_ARM)/release/server $(DIST_DIR)/$(TARGET_MACOS_ARM)/$(SERVER_BIN)
-	cp target/$(TARGET_WINDOWS)/release/server.exe $(DIST_DIR)/$(TARGET_WINDOWS)/$(SERVER_BIN).exe
-	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(TARGET_LINUX)/$(SERVER_BIN)
+	cp target/$(TARGET_MACOS_ARM)/release/server $(DIST_DIR)/$(SERVER_BIN)-macos-arm64
+	cp target/$(TARGET_WINDOWS)/release/server.exe $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe
+	cp target/$(TARGET_LINUX)/release/server $(DIST_DIR)/$(SERVER_BIN)-linux-x64
 
 # Clean build artifacts
 .PHONY: clean
