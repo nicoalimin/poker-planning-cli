@@ -71,6 +71,9 @@ pub async fn handle_message(player_id: Uuid, payload: ClientPayload, state: &Sha
                             };
                             locked_state.game_state.current_ticket = ticket;
                             locked_state.game_state.votes.clear();
+                            for p in locked_state.game_state.players.values_mut() {
+                                p.confirmed = false;
+                            }
                             broadcast_needed = true;
                         },
                         AdminCommand::Reveal => {
