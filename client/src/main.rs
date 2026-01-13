@@ -217,14 +217,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                              // Vote Confirmation
                              KeyCode::Char(' ') => {
                                  if let Some(net) = &network {
-                                     let confirmed = app.game_state.as_ref().map(|s| {
-                                        s.players.get(&app.self_id.unwrap()).map(|p| p.confirmed).unwrap_or(false)
-                                    }).unwrap_or(false);
+                                     let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
+                                        s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
+                                    }).unwrap_or((10,10, false));
                                     
                                     let new_confirmed = !confirmed;
                                     app.log(format!("Toggled confirmed: {}", new_confirmed));
                                     let msg = ClientPayload::VoteConfirm { confirmed: new_confirmed };
                                     net.tx.send(serde_json::to_string(&msg)?)?;
+                                    
+                                    // FORCE RESEND VOTE: ensure stationary players vote
+                                    check_zone_vote(x, y, &app.game_state, net);
                                  }
                              },
                              // Voting hotkeys (removed)
