@@ -348,9 +348,9 @@ fn draw_main(f: &mut Frame, app: &App) {
             .block(Block::default().borders(Borders::ALL).title("Info"));
         f.render_widget(bottom, bottom_chunks[0]);
         
-        let logs_text = app.logs.join("\n");
-        let logs = Paragraph::new(logs_text)
-            .block(Block::default().borders(Borders::ALL).title("Logs"));
-        f.render_widget(logs, bottom_chunks[1]);
+        // let logs_text = app.logs.join("\n");
+        // let logs = Paragraph::new(logs_text)
+        //     .block(Block::default().borders(Borders::ALL).title("Logs"));
+        // f.render_widget(logs, bottom_chunks[1]);
     }
 }
