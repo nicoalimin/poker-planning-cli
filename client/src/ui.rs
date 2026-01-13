@@ -329,21 +329,6 @@ fn draw_main(f: &mut Frame, app: &App) {
         let player_list = Paragraph::new(player_lines)
            .block(Block::default().borders(Borders::ALL).title("Connected Players"));
         f.render_widget(player_list, bottom_chunks[0]);
-
-        // Column 2: Help (Controls)
-        let help_lines = vec![
-            Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
-            Line::from("Arrows: Move"),
-            Line::from("Space: Confirm Vote"),
-            Line::from("R: Reveal (ScrumMaster)"),
-            Line::from("S: Start/Stop (ScrumMaster)"),
-            Line::from("Q: Quit"),
-        ];
-
-         let help_block = Paragraph::new(help_lines)
-           .block(Block::default().borders(Borders::ALL).title("Help"))
-           .style(Style::default().fg(Color::Gray));
-        f.render_widget(help_block, bottom_chunks[1]);
         
         // Column 3: Info (Phase & Stats)
         let help_text_bottom = match state.phase {
@@ -371,6 +356,22 @@ fn draw_main(f: &mut Frame, app: &App) {
         
         let info_block = Paragraph::new(info_content)
             .block(Block::default().borders(Borders::ALL).title("Info"));
-        f.render_widget(info_block, bottom_chunks[2]);
+        f.render_widget(info_block, bottom_chunks[1]);
+
+        // Column 2: Help (Controls)
+        let help_lines = vec![
+            Line::from(Span::styled("Controls:", Style::default().add_modifier(Modifier::BOLD))),
+            Line::from("Arrows: Move"),
+            Line::from("Space: Confirm Vote"),
+            Line::from("R: Reveal (ScrumMaster)"),
+            Line::from("S: Start/Stop (ScrumMaster)"),
+            Line::from("Space: Confirm/Unconfirm"),
+            Line::from("Q: Quit"),
+        ];
+
+         let help_block = Paragraph::new(help_lines)
+           .block(Block::default().borders(Borders::ALL).title("Help"))
+           .style(Style::default().fg(Color::Gray));
+        f.render_widget(help_block, bottom_chunks[2]);
     }
 }
