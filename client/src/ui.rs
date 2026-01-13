@@ -359,7 +359,7 @@ fn draw_main(f: &mut Frame, app: &App) {
             Line::from("Arrows: Move"),
             Line::from("Space: Confirm Vote"),
             Line::from("R: Reveal (ScrumMaster)"),
-            Line::from("S: Start/Stop (ScrumMaster)"),
+            Line::from("S: Start (ScrumMaster)"),
             Line::from("Space: Confirm/Unconfirm"),
             Line::from("Q: Quit"),
         ];
