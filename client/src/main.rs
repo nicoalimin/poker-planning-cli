@@ -72,25 +72,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         
         // Handle Network
         if let Some(net) = &mut network {
-            while let Ok(msg) = net.rx.try_recv() {
-                // Parse server message
-                 if let Ok(payload) = serde_json::from_str::<ServerPayload>(&msg) {
-                     match payload {
-                         ServerPayload::Welcome { self_id, state } => {
-                             app.log("Connected to server".to_string());
-                             app.self_id = Some(self_id);
-                             app.game_state = Some(state);
-                             app.current_screen = CurrentScreen::Main;
-                         },
-                         ServerPayload::StateUpdate(state) => {
-                             // app.log("State updated".to_string()); // Too spammy?
-                             app.game_state = Some(state);
-                         },
-                         ServerPayload::Error(e) => {
-                             app.log(format!("Server Error: {}", e));
+            match net.rx.try_recv() {
+                Ok(msg) => {
+                     // Parse server message
+                     if let Ok(payload) = serde_json::from_str::<ServerPayload>(&msg) {
+                         match payload {
+                             ServerPayload::Welcome { self_id, state } => {
+                                 app.log("Connected to server".to_string());
+                                 app.self_id = Some(self_id);
+                                 app.game_state = Some(state);
+                                 app.current_screen = CurrentScreen::Main;
+                                 app.connection_error = None; // Clear error
+                             },
+                             ServerPayload::StateUpdate(state) => {
+                                 app.game_state = Some(state);
+                             },
+                             ServerPayload::Error(e) => {
+                                 app.log(format!("Server Error: {}", e));
+                             }
                          }
                      }
-                 }
+                },
+                Err(tokio::sync::mpsc::error::TryRecvError::Empty) => {},
+                Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
+                    app.log("Disconnected from server".to_string());
+                    app.connection_error = Some("Disconnected from server".to_string());
+                    network = None;
+                    app.game_state = None;
+                    app.current_screen = CurrentScreen::Login;
+                }
             }
         }
 
@@ -122,7 +132,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         }
                                     },
                                     Err(e) => {
-                                        // TODO: Show connection error
+                                        app.connection_error = Some(format!("Connection Failed: {}", e));
+                                        app.log(format!("Connection Error: {}", e));
                                     }
                                 }
                             }

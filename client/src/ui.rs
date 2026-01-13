@@ -67,6 +67,12 @@ fn draw_login(f: &mut Frame, app: &App) {
 
     let info = Paragraph::new("Press ENTER to connect, ESC to quit");
     f.render_widget(info, chunks[5]);
+
+    if let Some(err) = &app.connection_error {
+        let err_msg = Paragraph::new(format!("Error: {}", err))
+            .style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD));
+        f.render_widget(err_msg, chunks[6]);
+    }
 }
 
 fn draw_main(f: &mut Frame, app: &App) {

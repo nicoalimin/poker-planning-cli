@@ -28,6 +28,8 @@ pub struct App {
     // Limits
     pub grid_width: u16,
     pub grid_height: u16,
+
+    pub connection_error: Option<String>,
 }
 
 impl App {
@@ -45,6 +47,7 @@ impl App {
             logs: Vec::new(),
             grid_width: 40, // Default fallback
             grid_height: 20, 
+            connection_error: None,
         }
     }
     
