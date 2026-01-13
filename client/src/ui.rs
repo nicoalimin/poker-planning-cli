@@ -1,10 +1,9 @@
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect, Alignment},
-    widgets::{Block, Borders, Paragraph, Clear, BorderType},
-    style::{Color, Style, Modifier, Stylize},
+    widgets::{Block, Borders, Paragraph},
+    style::{Color, Style, Modifier},
     text::{Line, Span},
-    symbols,
 };
 use crate::app::{App, CurrentScreen};
 use common::{Role, Phase};
@@ -76,8 +75,8 @@ fn draw_main(f: &mut Frame, app: &App) {
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3), // Top Bar (Status)
-                Constraint::Min(0),    // Main Game Area (2D Map)
-                Constraint::Length(5), // Bottom (Controls/Stats)
+                Constraint::Min(0),    // Middle (Map + Sidebar)
+                Constraint::Length(8), // Bottom (Logs/Info)
             ].as_ref())
             .split(f.area());
             
@@ -97,48 +96,37 @@ fn draw_main(f: &mut Frame, app: &App) {
             .style(Style::default().fg(Color::Green));
         f.render_widget(status_bar, chunks[0]);
 
-        // 2. Main Area (2D Map)
-        let map_rect = chunks[1];
+        // 2. Middle Area: Map + Sidebar
+        let middle_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(10), // Map
+                Constraint::Length(30), // Sidebar
+            ].as_ref())
+            .split(chunks[1]);
+
+        let map_rect = middle_chunks[0];
+        let sidebar_rect = middle_chunks[1];
+
         let map_block = Block::default().borders(Borders::ALL).title("Room");
         f.render_widget(map_block, map_rect);
         
         let inner_rect = map_rect.inner(ratatui::layout::Margin { vertical: 1, horizontal: 1 });
         
         // Draw Zones
-        let scale_x = 3;
-        let scale_y = 2;
+        let scale_x = 2;
+        let scale_y = 1;
         
+        // Render Zones (Simplified loop based on previous reads)
         let zones = crate::zones::calculate_zones(&state.config);
         for zone in zones {
-             // Scale zone coordinates to match player movement scale
-             // Assume zone.x/y are in "game units" same as player.x/y
-             // But existing zone logic used exact chars.
-             // We need to align them.
-             // Let's assume Zone structs are in "Grid Units" now.
-             // We need to update zones.rs to output Grid Units, or scale here.
-             
-             // If zones.rs returns "char" coords, we should convert or just render.
-             // Let's assume zones.rs returns Grid Units (small numbers like 2, 5, etc)
-             // and we scale them here.
-             
-             let zone_rect = Rect {
-                 x: inner_rect.x + (zone.x * scale_x),
-                 y: inner_rect.y + (zone.y * scale_y),
-                 width: zone.width * (scale_x / 2), // Adjust width scaling? Or just fixed size?
-                 height: zone.height * scale_y / 2, // Adjust?
-             };
-             // Wait, current zones.rs returns "x: start_x + (i * spacing)".
-             // start_x=2, spacing=10.
-             // If these are grid units, 10 is HUGE if we mult by 4 (40 chars).
-             // That's actually probably what we want for "Big enough visible box".
-             
              let zone_rect = Rect {
                  x: inner_rect.x + (zone.x * scale_x),
                  y: inner_rect.y + (zone.y * scale_y),
                  width: zone.width * scale_x, 
                  height: zone.height * scale_y, 
              };
-             // Ensure it fits
+             
              if zone_rect.right() <= inner_rect.right() && zone_rect.bottom() <= inner_rect.bottom() {
                  let block = Block::default()
                     .borders(Borders::ALL)
@@ -151,93 +139,186 @@ fn draw_main(f: &mut Frame, app: &App) {
         // Draw players
         for player in state.players.values() {
             let (x, y) = player.position;
-            // Simple mapping: 1 unit = 2 chars horizontally, 1 char vertically?
-            // To prevent out of bounds, clean up coordinates logic
-             if true { // Simplified check, doing per-rect check later
-                 let symbol = match player.symbol {
-                     common::AvatarSymbol::Human => "웃",
-                     common::AvatarSymbol::Alien => "👽",
-                     common::AvatarSymbol::Robot => "🤖",
-                     common::AvatarSymbol::Ghost => "👻",
-                 };
-                 let color = match player.color {
-                     common::AvatarColor::Red => Color::Red,
-                     common::AvatarColor::Green => Color::Green,
-                     common::AvatarColor::Blue => Color::Blue,
-                     common::AvatarColor::Yellow => Color::Yellow,
-                     common::AvatarColor::Magenta => Color::Magenta,
-                     common::AvatarColor::Cyan => Color::Cyan,
-                 };
+            
+             let symbol = match player.symbol {
+                 common::AvatarSymbol::Human => "웃",
+                 common::AvatarSymbol::Alien => "👽",
+                 common::AvatarSymbol::Robot => "🤖",
+                 common::AvatarSymbol::Ghost => "👻",
+                 common::AvatarSymbol::Cat => "🐱",
+                 common::AvatarSymbol::Dog => "🐶",
+                 common::AvatarSymbol::Bird => "🐦",
+                 common::AvatarSymbol::Fish => "🐠",
+                 common::AvatarSymbol::Tree => "🌲",
+                 common::AvatarSymbol::Flower => "🌺",
+                 common::AvatarSymbol::Star => "⭐",
+                 common::AvatarSymbol::Moon => "🌙",
+                 common::AvatarSymbol::Sun => "☀️",
+                 common::AvatarSymbol::Heart => "❤️",
+                 common::AvatarSymbol::Skull => "💀",
+                 common::AvatarSymbol::Smile => "😊",
+                 common::AvatarSymbol::Zap => "⚡",
+                 common::AvatarSymbol::Anchor => "⚓",
+                 common::AvatarSymbol::Music => "🎵",
+                 common::AvatarSymbol::Globe => "🌍",
+             };
+             let color = match player.color {
+                 common::AvatarColor::Red => Color::Red,
+                 common::AvatarColor::Green => Color::Green,
+                 common::AvatarColor::Blue => Color::Blue,
+                 common::AvatarColor::Yellow => Color::Yellow,
+                 common::AvatarColor::Magenta => Color::Magenta,
+                 common::AvatarColor::Cyan => Color::Cyan,
+                 common::AvatarColor::Orange => Color::Rgb(255, 165, 0),
+                 common::AvatarColor::Pink => Color::Rgb(255, 192, 203),
+                 common::AvatarColor::Purple => Color::Rgb(128, 0, 128),
+                 common::AvatarColor::Mint => Color::Rgb(189, 252, 201),
+                 common::AvatarColor::Gold => Color::Rgb(255, 215, 0),
+                 common::AvatarColor::Silver => Color::Rgb(192, 192, 192),
+                 common::AvatarColor::Bronze => Color::Rgb(205, 127, 50),
+                 common::AvatarColor::Lime => Color::Rgb(50, 205, 50),
+                 common::AvatarColor::Teal => Color::Rgb(0, 128, 128),
+                 common::AvatarColor::Indigo => Color::Rgb(75, 0, 130),
+                 common::AvatarColor::Violet => Color::Rgb(238, 130, 238),
+                 common::AvatarColor::Coral => Color::Rgb(255, 127, 80),
+                 common::AvatarColor::Crimson => Color::Rgb(220, 20, 60),
+                 common::AvatarColor::White => Color::White,
+             };
                  
-                 // Render as a box
-                 // Scale factor check: map (x,y) to screen space?
-                 // For now, let's keep 1:1 coordinate but draw a bigger box centered-ish?
-                 // OR scale coordinates: screen_x = x * 4, screen_y = y * 2
-                 // OR scale coordinates: screen_x = x * 4, screen_y = y * 2
-                 // This makes the world "bigger".
-                 let scale_x = 3;
-                 let scale_y = 2;
-                 
-                 let screen_x = inner_rect.x + (x * scale_x);
-                 let screen_y = inner_rect.y + (y * scale_y);
+             let screen_x = inner_rect.x + (x * scale_x);
+             let screen_y = inner_rect.y + (y * scale_y);
 
-                 let area = Rect {
-                     x: screen_x,
-                     y: screen_y,
-                     width: scale_x,
-                     height: scale_y,
-                 };
-                 
-                 // Boundary check with scaled coords
-                 if area.right() <= inner_rect.right() && area.bottom() <= inner_rect.bottom() {
-                    // Highlight self with Border
-                    let block_type = if Some(player.id) == app.self_id {
-                        Borders::ALL
-                    } else {
-                        Borders::NONE
-                    };
+             let area = Rect {
+                 x: screen_x,
+                 y: screen_y,
+                 width: scale_x,
+                 height: scale_y,
+             };
+             
+             if area.right() <= inner_rect.right() && area.bottom() <= inner_rect.bottom() {
+                let block_type = if Some(player.id) == app.self_id {
+                    Borders::ALL
+                } else {
+                    Borders::NONE
+                };
+                
+                 let paragraph = Paragraph::new(symbol)
+                    .block(Block::default().borders(block_type))
+                    .style(Style::default().bg(color).fg(Color::Black).add_modifier(Modifier::BOLD))
+                    .alignment(Alignment::Center);
                     
-                     let paragraph = Paragraph::new(symbol)
-                        .block(Block::default().borders(block_type))
-                        .style(Style::default().bg(color).fg(Color::Black).add_modifier(Modifier::BOLD))
-                        .alignment(Alignment::Center);
-                        
-                     // Visibility logic
-                     let can_see = match app.role_input {
-                         Role::ScrumMaster => true,
-                         _ => {
-                             if let Phase::Voting { .. } = state.phase {
-                                 Some(player.id) == app.self_id
-                             } else {
-                                 true
-                             }
+                 let can_see = match app.role_input {
+                     Role::ScrumMaster => true,
+                     _ => {
+                         if let Phase::Voting { .. } = state.phase {
+                             Some(player.id) == app.self_id
+                         } else {
+                             true
                          }
-                     };
-
-                     if can_see {
-                        f.render_widget(paragraph, area);
-                        // Name label above?
-                        if screen_y > inner_rect.y {
-                             let name_area = Rect { x: screen_x, y: screen_y - 1, width: (player.name.len() as u16).max(3), height: 1 };
-                             if name_area.right() <= inner_rect.right() {
-                                f.render_widget(Paragraph::new(player.name.as_str()).style(Style::default().fg(Color::White)), name_area);
-                             }
-                        }
                      }
+                 };
+
+                 if can_see {
+                    f.render_widget(paragraph, area);
+                    if screen_y > inner_rect.y {
+                         let name_area = Rect { x: screen_x, y: screen_y - 1, width: (player.name.len() as u16).max(3), height: 1 };
+                         if name_area.right() <= inner_rect.right() {
+                            f.render_widget(Paragraph::new(player.name.as_str()).style(Style::default().fg(Color::White)), name_area);
+                         }
+                    }
                  }
              }
         }
         
-        // 3. Stats / Instructions
+        // Sidebar (Players + Help)
+        let sidebar_chunks = Layout::default()
+             .direction(Direction::Vertical)
+             .constraints([
+                 Constraint::Min(10), // Player List
+                 Constraint::Length(10), // Help
+             ].as_ref())
+             .split(sidebar_rect);
+
+        // Player List
+        let mut player_lines = Vec::new();
+        for p in state.players.values() {
+             let p_symbol = match p.symbol {
+                 common::AvatarSymbol::Human => "웃",
+                 common::AvatarSymbol::Alien => "👽",
+                 common::AvatarSymbol::Robot => "🤖",
+                 common::AvatarSymbol::Ghost => "👻",
+                 common::AvatarSymbol::Cat => "🐱",
+                 common::AvatarSymbol::Dog => "🐶",
+                 common::AvatarSymbol::Bird => "🐦",
+                 common::AvatarSymbol::Fish => "🐠",
+                 common::AvatarSymbol::Tree => "🌲",
+                 common::AvatarSymbol::Flower => "🌺",
+                 common::AvatarSymbol::Star => "⭐",
+                 common::AvatarSymbol::Moon => "🌙",
+                 common::AvatarSymbol::Sun => "☀️",
+                 common::AvatarSymbol::Heart => "❤️",
+                 common::AvatarSymbol::Skull => "💀",
+                 common::AvatarSymbol::Smile => "😊",
+                 common::AvatarSymbol::Zap => "⚡",
+                 common::AvatarSymbol::Anchor => "⚓",
+                 common::AvatarSymbol::Music => "🎵",
+                 common::AvatarSymbol::Globe => "🌍",
+             };
+             
+             let p_color = match p.color {
+                    common::AvatarColor::Red => Color::Red,
+                    common::AvatarColor::Green => Color::Green,
+                    common::AvatarColor::Blue => Color::Blue,
+                    common::AvatarColor::Yellow => Color::Yellow,
+                    common::AvatarColor::Magenta => Color::Magenta,
+                    common::AvatarColor::Cyan => Color::Cyan,
+                    common::AvatarColor::Orange => Color::Rgb(255, 165, 0),
+                    common::AvatarColor::Pink => Color::Rgb(255, 192, 203),
+                    common::AvatarColor::Purple => Color::Rgb(128, 0, 128),
+                    common::AvatarColor::Mint => Color::Rgb(189, 252, 201),
+                    common::AvatarColor::Gold => Color::Rgb(255, 215, 0),
+                    common::AvatarColor::Silver => Color::Rgb(192, 192, 192),
+                    common::AvatarColor::Bronze => Color::Rgb(205, 127, 50),
+                    common::AvatarColor::Lime => Color::Rgb(50, 205, 50),
+                    common::AvatarColor::Teal => Color::Rgb(0, 128, 128),
+                    common::AvatarColor::Indigo => Color::Rgb(75, 0, 130),
+                    common::AvatarColor::Violet => Color::Rgb(238, 130, 238),
+                    common::AvatarColor::Coral => Color::Rgb(255, 127, 80),
+                    common::AvatarColor::Crimson => Color::Rgb(220, 20, 60),
+                    common::AvatarColor::White => Color::White,
+             };
+
+            player_lines.push(Line::from(vec![
+                Span::styled(format!("{} ", p_symbol), Style::default().fg(p_color)),
+                Span::raw(format!("{} ({:?})", p.name, p.role))
+            ]));
+        }
+        let player_list = Paragraph::new(player_lines)
+           .block(Block::default().borders(Borders::ALL).title("Connected Players"));
+        f.render_widget(player_list, sidebar_chunks[0]);
         
-        let help_text = match state.phase {
+        // Help
+        let help_text = vec![
+            Line::from("Controls:"),
+            Line::from("Arrows: Move"),
+            Line::from("1-8: Vote"),
+            Line::from("R: Reveal (SM)"),
+            Line::from("C: Clear (SM)"),
+            Line::from("Q: Quit"),
+        ];
+         let help_block = Paragraph::new(help_text)
+           .block(Block::default().borders(Borders::ALL).title("Help"))
+           .style(Style::default().fg(Color::Gray));
+        f.render_widget(help_block, sidebar_chunks[1]);
+        
+        // 3. Bottom Area (Logs/Info)
+        
+        let help_text_bottom = match state.phase {
             Phase::Voting { .. } => "VOTING ACTIVE! Move to area or Press 1, 2, 3, 5, 8 to vote.",
             Phase::Revealed => {
-                 // Calculate stats
-                 // Simple text for now
                  "VOTING CLOSED. Check stats."
             },
-            Phase::Idle => "Waiting for Scrum Master to start vote. (SM Keys: 's' start, 'r' reveal, '0' reset)",
+            Phase::Idle => "Waiting for Scrum Master.",
         };
         
         // If Revealed, show stats
@@ -256,7 +337,7 @@ fn draw_main(f: &mut Frame, app: &App) {
              }
         }
 
-        let bottom_text = format!("{}\n{}", help_text, stats_text);
+        let bottom_text = format!("{}\n{}", help_text_bottom, stats_text);
         
         let bottom_chunks = Layout::default()
             .direction(Direction::Horizontal)

@@ -16,7 +16,7 @@ pub async fn handle_message(player_id: Uuid, payload: ClientPayload, state: &Sha
                     id: player_id,
                     name,
                     role,
-                    position: (20, 10), // Default start pos (approx middle)
+                    position: (2, 2), // Top-left start pos
                     color,
                     symbol,
                 };

@@ -13,7 +13,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use common::{ClientPayload, ServerPayload, Role, Phase};
+use common::{ClientPayload, ServerPayload, Role};
 use tui_input::backend::crossterm::EventHandler;
 
 mod app;
@@ -104,17 +104,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 // Connect
                                 match Network::connect(&app.server_url).await {
                                     Ok(net) => {
-                                        // Send Login
-                                        let login = ClientPayload::Login {
-                                            name: app.name_input.value().to_string(),
-                                            role: app.role_input.clone(),
-                                            color: app.color_input.clone(),
-                                            symbol: app.symbol_input.clone(),
-                                        };
-                                        app.log(format!("Logging in as {} ({:?})", app.name_input.value(), app.role_input));
-                                        let json = serde_json::to_string(&login)?;
-                                        net.tx.send(json)?;
-                                        network = Some(net);
+                                        // Validate Name
+                                        if app.name_input.value().trim().is_empty() {
+                                            app.log("Name cannot be empty!".to_string());
+                                        } else {
+                                            // Send Login
+                                            let login = ClientPayload::Login {
+                                                name: app.name_input.value().to_string(),
+                                                role: app.role_input.clone(),
+                                                color: app.color_input.clone(),
+                                                symbol: app.symbol_input.clone(),
+                                            };
+                                            app.log(format!("Logging in as {} ({:?})", app.name_input.value(), app.role_input));
+                                            let json = serde_json::to_string(&login)?;
+                                            net.tx.send(json)?;
+                                            network = Some(net);
+                                        }
                                     },
                                     Err(e) => {
                                         // TODO: Show connection error
@@ -133,22 +138,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 };
                             }
                             KeyCode::F(1) => {
-                                app.color_input = match app.color_input {
-                                    common::AvatarColor::Red => common::AvatarColor::Green,
-                                    common::AvatarColor::Green => common::AvatarColor::Blue,
-                                    common::AvatarColor::Blue => common::AvatarColor::Yellow,
-                                    common::AvatarColor::Yellow => common::AvatarColor::Magenta,
-                                    common::AvatarColor::Magenta => common::AvatarColor::Cyan,
-                                    common::AvatarColor::Cyan => common::AvatarColor::Red,
-                                };
+                                app.color_input = app.color_input.next();
                             }
                             KeyCode::F(2) => {
-                                app.symbol_input = match app.symbol_input {
-                                    common::AvatarSymbol::Human => common::AvatarSymbol::Alien,
-                                    common::AvatarSymbol::Alien => common::AvatarSymbol::Robot,
-                                    common::AvatarSymbol::Robot => common::AvatarSymbol::Ghost,
-                                    common::AvatarSymbol::Ghost => common::AvatarSymbol::Human,
-                                };
+                                app.symbol_input = app.symbol_input.next();
                             }
                             _ => {
                                 // Input name
@@ -168,8 +161,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
                                     }).unwrap_or((10,10));
                                     
-                                    let new_x = x.saturating_sub(1);
-                                    if new_x >= 0 { // Boundary Check
+                                    if x > 0 { 
+                                        let new_x = x - 1;
                                         let msg = ClientPayload::Move { x: new_x, y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(new_x, y, &app.game_state, net);
@@ -198,8 +191,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         s.players.get(&app.self_id.unwrap()).map(|p| p.position).unwrap_or((10,10))
                                     }).unwrap_or((10,10));
                                     
-                                    let new_y = y.saturating_sub(1);
-                                    if new_y >= 0 { // Boundary Check
+                                    if y > 0 { 
+                                        let new_y = y - 1;
                                         let msg = ClientPayload::Move { x, y: new_y };
                                         net.tx.send(serde_json::to_string(&msg)?)?;
                                         check_zone_vote(x, new_y, &app.game_state, net);

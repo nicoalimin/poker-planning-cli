@@ -1,6 +1,7 @@
 use common::{GameState, Phase, Role, VotingConfig};
 use uuid::Uuid;
 use tui_input::Input;
+use rand::Rng;
 
 pub enum CurrentScreen {
     Login,
@@ -36,8 +37,8 @@ impl App {
             server_url: "127.0.0.1:8888".to_string(),
             name_input: Input::default(),
             role_input: Role::Participant,
-            color_input: common::AvatarColor::Yellow,
-            symbol_input: common::AvatarSymbol::Human,
+            color_input: common::AvatarColor::random(),
+            symbol_input: common::AvatarSymbol::random(),
             game_state: None,
             self_id: None,
             last_known_pos: (10, 10),
