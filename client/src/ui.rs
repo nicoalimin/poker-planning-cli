@@ -315,9 +315,15 @@ fn draw_main(f: &mut Frame, app: &App) {
                     common::AvatarColor::White => Color::White,
              };
 
+             let name_style = if p.confirmed {
+                 Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+             } else {
+                 Style::default()
+             };
+
             player_lines.push(Line::from(vec![
                 Span::styled(format!("{} ", p_symbol), Style::default().fg(p_color)),
-                Span::raw(format!("{} ({:?})", p.name, p.role))
+                Span::styled(format!("{} ({:?})", p.name, p.role), name_style)
             ]));
         }
         let player_list = Paragraph::new(player_lines)
