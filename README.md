@@ -44,13 +44,13 @@ Or manually download the binary for your platform:
 
 ```bash
 # macOS (Apple Silicon)
-curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-macos-arm64
+curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-macos-arm64
 
 # Linux (x64)
-curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-linux-x64
+curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-linux-x64
 
 # Windows (x64) - use PowerShell or download from browser
-curl -L -o client.exe https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.0.0/poker-client-windows-x64.exe
+curl -L -o client.exe https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-windows-x64.exe
 ```
 
 Then make it executable (macOS/Linux only):
