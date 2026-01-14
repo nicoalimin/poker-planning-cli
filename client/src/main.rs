@@ -104,8 +104,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        // Handle Input with timeout to allow loop to cycle
-        if event::poll(Duration::from_millis(50))? {
+        // Handle Input - drain all pending events for responsive movement
+        let mut should_break = false;
+        while event::poll(Duration::from_millis(0))? {
             if let Event::Key(key) = event::read()? {
                 match app.current_screen {
                     CurrentScreen::Login => {
@@ -138,6 +139,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 }
                             }
                             KeyCode::Esc => {
+                                should_break = true;
                                 break;
                             }
                             KeyCode::Tab => {
@@ -163,10 +165,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     CurrentScreen::Main => {
                         // Main game inputs
                          match key.code {
-                            KeyCode::Esc => { app.log("Quit".to_string()); break; },
-                            KeyCode::Char('q') => { app.log("Quit".to_string()); break; },
+                            KeyCode::Esc => { app.log("Quit".to_string()); should_break = true; break; },
+                            KeyCode::Char('q') => { app.log("Quit".to_string()); should_break = true; break; },
                             KeyCode::Left => {
-                                app.log("Pressed Left".to_string());
                                 if let Some(net) = &network {
                                      let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
@@ -175,13 +176,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     if !confirmed && x > 0 { 
                                         let new_x = x - 1;
                                         let msg = ClientPayload::Move { x: new_x, y };
-                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        let _ = net.tx.send(serde_json::to_string(&msg)?);
                                         check_zone_vote(new_x, y, &app.game_state, net);
                                     }
                                 }
                             }
                             KeyCode::Right => {
-                                app.log("Pressed Right".to_string());
                                 if let Some(net) = &network {
                                      let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
@@ -190,13 +190,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_x = x + 1;
                                     if !confirmed && new_x < app.grid_width { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x: new_x, y };
-                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        let _ = net.tx.send(serde_json::to_string(&msg)?);
                                         check_zone_vote(new_x, y, &app.game_state, net);
                                     }
                                 }
                             }
                              KeyCode::Up => {
-                                app.log("Pressed Up".to_string());
                                 if let Some(net) = &network {
                                      let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
@@ -205,13 +204,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     if !confirmed && y > 0 { 
                                         let new_y = y - 1;
                                         let msg = ClientPayload::Move { x, y: new_y };
-                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        let _ = net.tx.send(serde_json::to_string(&msg)?);
                                         check_zone_vote(x, new_y, &app.game_state, net);
                                     }
                                 }
                             }
                              KeyCode::Down => {
-                                app.log("Pressed Down".to_string());
                                 if let Some(net) = &network {
                                      let (x,y, confirmed) = app.game_state.as_ref().map(|s| {
                                         s.players.get(&app.self_id.unwrap()).map(|p| (p.position.0, p.position.1, p.confirmed)).unwrap_or((10,10, false))
@@ -220,7 +218,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_y = y + 1;
                                     if !confirmed && new_y < app.grid_height { // Dynamic Boundary
                                         let msg = ClientPayload::Move { x, y: new_y };
-                                        net.tx.send(serde_json::to_string(&msg)?)?;
+                                        let _ = net.tx.send(serde_json::to_string(&msg)?);
                                         check_zone_vote(x, new_y, &app.game_state, net);
                                     }
                                 }
@@ -235,7 +233,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let new_confirmed = !confirmed;
                                     app.log(format!("Toggled confirmed: {}", new_confirmed));
                                     let msg = ClientPayload::VoteConfirm { confirmed: new_confirmed };
-                                    net.tx.send(serde_json::to_string(&msg)?)?;
+                                    let _ = net.tx.send(serde_json::to_string(&msg)?);
                                     
                                     // FORCE RESEND VOTE: ensure stationary players vote
                                     check_zone_vote(x, y, &app.game_state, net);
@@ -247,14 +245,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                  app.log("Admin: Start Vote".to_string());
                                  let cmd = common::AdminCommand::StartVote { ticket: None, timeout: Some(20) };
                                  if let Some(net) = &network {
-                                     net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
+                                     let _ = net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?);
                                  }
                             },
                              KeyCode::Char('r') => { // Reveal
                                  app.log("Admin: Reveal".to_string());
                                  let cmd = common::AdminCommand::Reveal;
                                  if let Some(net) = &network {
-                                     net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?)?;
+                                     let _ = net.tx.send(serde_json::to_string(&ClientPayload::Admin(cmd))?);
                                  }
                             },
                             //  KeyCode::Char('0') => { // Reset
@@ -270,6 +268,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+        if should_break {
+            break;
+        }
+        
+        // Small sleep to prevent busy-looping when no events
+        tokio::time::sleep(Duration::from_millis(16)).await;
     }
 
     // Cleanup
