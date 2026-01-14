@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Jira Issue Helper",
+  "version": "1.0.0",
+  "description": "Adds functionality next to Jira issue breadcrumbs",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://smma-sqe.atlassian.net/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
