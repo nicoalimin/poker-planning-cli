@@ -1,4 +1,4 @@
-use common::{GameState, Player, Role, ServerPayload, VotingConfig, Phase, Ticket, current_time_unix};
+use common::{GameState, ServerPayload, VotingConfig, Phase};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
@@ -35,6 +35,7 @@ impl ServerState {
         self.game_state.votes.remove(&id);
     }
 
+    #[allow(dead_code)]
     pub fn broadcast(&self, msg: ServerPayload) {
         for tx in self.clients.values() {
             let _ = tx.send(msg.clone());

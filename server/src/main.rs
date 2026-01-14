@@ -1,18 +1,19 @@
 use tokio::net::{TcpListener, TcpStream};
 use tokio_util::codec::{Framed, LinesCodec};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, broadcast};
 use futures::SinkExt;
 use futures::StreamExt;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 use std::net::SocketAddr;
 
-use common::{ClientPayload, ServerPayload, Player, Role, Phase, GameState, VotingConfig};
+use common::{ClientPayload, Phase, VotingConfig};
 mod state;
 mod handler;
+mod http_api;
 use state::{ServerState, SharedState};
+use http_api::HttpState;
 
-// ... imports
 use std::fs;
 use std::path::Path;
 
@@ -31,34 +32,62 @@ fn load_config() -> VotingConfig {
     default
 }
 
+#[allow(dead_code)]
 fn save_config(cfg: &VotingConfig) {
     let _ = fs::write(CONFIG_PATH, serde_json::to_string_pretty(cfg).unwrap());
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "0.0.0.0:8888";
-    let listener = TcpListener::bind(addr).await?;
-    println!("Server listening on {}", addr);
+    let tcp_addr = "0.0.0.0:8888";
+    let http_addr = "0.0.0.0:8889";
 
     let mut state_val = ServerState::new();
     state_val.game_state.config = load_config();
     let state = Arc::new(Mutex::new(state_val));
 
+    // Create broadcast channel for SSE status updates
+    let (status_tx, _) = broadcast::channel::<http_api::StatusUpdate>(100);
+
+    // Create HTTP state
+    let http_state = Arc::new(HttpState {
+        game_state: state.clone(),
+        status_tx: status_tx.clone(),
+    });
+
+    // Start HTTP server
+    let http_router = http_api::create_router(http_state);
+    let http_listener = tokio::net::TcpListener::bind(http_addr).await?;
+    println!("HTTP API listening on {}", http_addr);
+
+    tokio::spawn(async move {
+        axum::serve(http_listener, http_router).await.unwrap();
+    });
+
+    // Start TCP server for CLI clients
+    let listener = TcpListener::bind(tcp_addr).await?;
+    println!("TCP server listening on {}", tcp_addr);
+
     loop {
         let (stream, addr) = listener.accept().await?;
         let state = state.clone();
+        let status_tx = status_tx.clone();
         tokio::spawn(async move {
-            if let Err(e) = handle_connection(stream, addr, state).await {
+            if let Err(e) = handle_connection(stream, addr, state, status_tx).await {
                 eprintln!("Error handling connection from {}: {}", addr, e);
             }
         });
     }
 }
 
-async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedState) -> Result<(), Box<dyn std::error::Error>> {
-    let mut framed = Framed::new(stream, LinesCodec::new());
-    let (tx, mut rx) = mpsc::unbounded_channel();
+async fn handle_connection(
+    stream: TcpStream,
+    addr: SocketAddr,
+    state: SharedState,
+    status_tx: broadcast::Sender<http_api::StatusUpdate>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let framed = Framed::new(stream, LinesCodec::new());
+    let (tx, rx) = mpsc::unbounded_channel();
     
     // We need to store the tx in the state, but we don't know the Player ID yet.
     // Flow: 
@@ -73,14 +102,15 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
     let player_id = Uuid::new_v4();
     
     // Create a loop to handle outgoing messages (from other parts of the system to this client)
-    let mut outgoing_rx = rx;
+    let outgoing_rx = rx;
     let (mut stream_tx, mut stream_rx) = framed.split();
     
     // Spawn a task to forward messages from the channel to the TCP stream
-    let forward_task = tokio::spawn(async move {
+    let _forward_task = tokio::spawn(async move {
+        let mut outgoing_rx = outgoing_rx;
         while let Some(msg) = outgoing_rx.recv().await {
             let json = serde_json::to_string(&msg).unwrap();
-            if let Err(e) = stream_tx.send(json).await {
+            if stream_tx.send(json).await.is_err() {
                 // Client disconnected or error
                 println!("Client {} send error (disconnected?)", addr);
                 break;
@@ -93,9 +123,10 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
         match result {
             Ok(line) => {
                 let clean_line = line.trim();
-                // println!("Received: {}", clean_line); // Debug
                 if let Ok(payload) = serde_json::from_str::<ClientPayload>(clean_line) {
                     handler::handle_message(player_id, payload, &state, &tx).await;
+                    // Broadcast status update to SSE subscribers
+                    let _ = status_tx.send(get_current_status(&state));
                 } else {
                     eprintln!("Failed to parse: {}", clean_line);
                 }
@@ -115,8 +146,49 @@ async fn handle_connection(stream: TcpStream, addr: SocketAddr, state: SharedSta
         locked_state.broadcast_state();
     }
     
-    // We don't need to abort forward_task explicitly as the channel sender (tx) will be dropped, 
-    // causing recv to return None, terminating the loop.
+    // Broadcast status update after client disconnect
+    let _ = status_tx.send(get_current_status(&state));
     
     Ok(())
+}
+
+fn get_current_status(game_state: &SharedState) -> http_api::StatusUpdate {
+    let locked_state = game_state.lock().unwrap();
+
+    let phase = match &locked_state.game_state.phase {
+        Phase::Idle => "idle".to_string(),
+        Phase::Voting { .. } => "voting".to_string(),
+        Phase::Revealed => "revealed".to_string(),
+    };
+
+    let issue_number = locked_state
+        .game_state
+        .current_ticket
+        .as_ref()
+        .map(|t| t.title.clone());
+
+    let connected_players: Vec<http_api::ConnectedPlayer> = locked_state
+        .game_state
+        .players
+        .iter()
+        .map(|(id, player)| http_api::ConnectedPlayer {
+            name: player.name.clone(),
+            has_voted: locked_state.game_state.votes.get(id).map(|v| v.is_some()).unwrap_or(false),
+        })
+        .collect();
+
+    let votes_cast = locked_state
+        .game_state
+        .votes
+        .values()
+        .filter(|v| v.is_some())
+        .count();
+
+    http_api::StatusUpdate {
+        phase,
+        issue_number,
+        connected_players,
+        votes_cast,
+        total_players: locked_state.game_state.players.len(),
+    }
 }
