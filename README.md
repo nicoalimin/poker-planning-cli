@@ -20,6 +20,17 @@ aws ssm start-session \
     --region ap-southeast-1
 ```
 
+If you want to run the Jira plugin, you must forward the HTTP port (8887) to your local machine using AWS Systems Manager.
+Run the following command in a terminal (keep it open):
+
+```bash
+aws ssm start-session \
+    --target i-0498121b79469ca5b \
+    --document-name AWS-StartPortForwardingSessionToRemoteHost \
+    --parameters '{"portNumber":["8887"],"localPortNumber":["8887"]}' \
+    --region ap-southeast-1
+```
+
 *Note: Requires AWS CLI and Session Manager plugin.*
 
 ### 2. Install Client
