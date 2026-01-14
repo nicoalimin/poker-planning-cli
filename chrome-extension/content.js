@@ -4,7 +4,7 @@
 const TARGET_SELECTOR = '[data-testid="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container"]';
 const ISSUE_LINK_SELECTOR = '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]';
 const CUSTOM_DIV_ID = 'jira-issue-helper-div';
-const SERVER_URL = 'http://localhost:8889';
+const SERVER_URL = 'http://localhost:8888';
 
 let eventSource = null;
 let currentStatus = null;
