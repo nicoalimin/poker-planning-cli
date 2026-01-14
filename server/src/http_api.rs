@@ -82,6 +82,7 @@ pub fn create_router(state: std::sync::Arc<HttpState>) -> Router {
         .route("/api/start-voting", post(start_voting))
         .route("/api/reveal", post(reveal_votes))
         .route("/api/status", get(status_stream))
+        .route("/api/status-poll", get(status_poll))
         .layer(cors)
         .with_state(state)
 }
@@ -175,6 +176,13 @@ async fn reveal_votes(
         votes,
         statistics,
     })
+}
+
+// Simple polling endpoint for Chrome extension (avoids CORS issues with SSE)
+async fn status_poll(
+    State(state): State<std::sync::Arc<HttpState>>,
+) -> Json<StatusUpdate> {
+    Json(get_current_status(&state.game_state))
 }
 
 async fn status_stream(

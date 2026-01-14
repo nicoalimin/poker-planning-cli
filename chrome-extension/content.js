@@ -4,10 +4,27 @@
 const TARGET_SELECTOR = '[data-testid="issue.views.issue-base.foundation.breadcrumbs.breadcrumb-current-issue-container"]';
 const ISSUE_LINK_SELECTOR = '[data-testid="issue.views.issue-base.foundation.breadcrumbs.current-issue.item"]';
 const CUSTOM_DIV_ID = 'jira-issue-helper-div';
-const SERVER_URL = 'http://localhost:8888';
 
-let eventSource = null;
+let statusPollInterval = null;
 let currentStatus = null;
+
+// Send API request through background script to bypass CORS
+async function apiRequest(endpoint, method = 'GET', body = null) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { type: 'API_REQUEST', endpoint, method, body },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response.error));
+        }
+      }
+    );
+  });
+}
 
 // Get the issue number from the breadcrumb
 function getIssueNumber() {
@@ -26,17 +43,9 @@ async function startVoting() {
   const issueNumber = getIssueNumber();
   
   try {
-    const response = await fetch(`${SERVER_URL}/api/start-voting`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        issue_number: issueNumber || null,
-      }),
+    const data = await apiRequest('/api/start-voting', 'POST', {
+      issue_number: issueNumber || null,
     });
-    
-    const data = await response.json();
     console.log('[Jira Issue Helper] Start voting response:', data);
     updateButtonStates();
   } catch (error) {
@@ -48,14 +57,7 @@ async function startVoting() {
 // Reveal votes
 async function revealVotes() {
   try {
-    const response = await fetch(`${SERVER_URL}/api/reveal`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    const data = await response.json();
+    const data = await apiRequest('/api/reveal', 'POST');
     console.log('[Jira Issue Helper] Reveal votes response:', data);
     showResults(data);
     updateButtonStates();
@@ -65,30 +67,34 @@ async function revealVotes() {
   }
 }
 
-// Connect to SSE status stream
-function connectToStatusStream() {
-  if (eventSource) {
-    eventSource.close();
+// Poll for status updates (replaces SSE to avoid CORS issues)
+function startStatusPolling() {
+  if (statusPollInterval) {
+    clearInterval(statusPollInterval);
   }
 
-  eventSource = new EventSource(`${SERVER_URL}/api/status`);
+  // Initial fetch
+  fetchStatus();
 
-  eventSource.onmessage = (event) => {
-    try {
-      currentStatus = JSON.parse(event.data);
-      console.log('[Jira Issue Helper] Status update:', currentStatus);
-      updateStatusDisplay();
-      updateButtonStates();
-    } catch (error) {
-      console.error('[Jira Issue Helper] Failed to parse status:', error);
+  // Poll every 2 seconds
+  statusPollInterval = setInterval(fetchStatus, 2000);
+}
+
+async function fetchStatus() {
+  try {
+    const data = await apiRequest('/api/status-poll', 'GET');
+    currentStatus = data;
+    console.log('[Jira Issue Helper] Status update:', currentStatus);
+    updateStatusDisplay();
+    updateButtonStates();
+  } catch (error) {
+    console.error('[Jira Issue Helper] Failed to fetch status:', error);
+    // Show connection error in UI
+    const statusDiv = document.getElementById('poker-status-display');
+    if (statusDiv) {
+      statusDiv.innerHTML = '<span style="color: #ff5630;">Server offline - retrying...</span>';
     }
-  };
-
-  eventSource.onerror = (error) => {
-    console.error('[Jira Issue Helper] SSE connection error:', error);
-    // Retry connection after 5 seconds
-    setTimeout(connectToStatusStream, 5000);
-  };
+  }
 }
 
 // Update the status display in the UI
@@ -258,8 +264,8 @@ function addCustomDiv() {
     document.getElementById('poker-start-btn').addEventListener('click', startVoting);
     document.getElementById('poker-reveal-btn').addEventListener('click', revealVotes);
 
-    // Connect to status stream
-    connectToStatusStream();
+    // Start polling for status updates
+    startStatusPolling();
     
     console.log('[Jira Issue Helper] Custom div added successfully');
   }
@@ -289,7 +295,7 @@ if (document.readyState === 'loading') {
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
-  if (eventSource) {
-    eventSource.close();
+  if (statusPollInterval) {
+    clearInterval(statusPollInterval);
   }
 });

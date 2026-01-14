@@ -40,7 +40,7 @@ fn save_config(cfg: &VotingConfig) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tcp_addr = "0.0.0.0:8888";
-    let http_addr = "0.0.0.0:8889";
+    let http_addr = "0.0.0.0:8887";
 
     let mut state_val = ServerState::new();
     state_val.game_state.config = load_config();

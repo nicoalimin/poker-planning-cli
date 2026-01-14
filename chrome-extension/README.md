@@ -12,7 +12,7 @@ A Chrome extension that integrates with the Poker Planning CLI server, adding vo
 
 The Poker Planning CLI server must be running. It provides:
 - TCP server on port 8888 (for CLI clients)
-- HTTP API on port 8889 (for this Chrome extension)
+- HTTP API on port 8887 (for this Chrome extension)
 
 ## Installation
 

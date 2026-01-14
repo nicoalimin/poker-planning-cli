@@ -4,6 +4,12 @@
   "version": "1.0.0",
   "description": "Adds functionality next to Jira issue breadcrumbs",
   "permissions": [],
+  "host_permissions": [
+    "http://localhost:8887/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://smma-sqe.atlassian.net/*"],
