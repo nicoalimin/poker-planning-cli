@@ -38,9 +38,21 @@ function getIssueNumber() {
   return null;
 }
 
+// Clear the results display
+function clearResults() {
+  const resultsDiv = document.getElementById('poker-results-display');
+  if (resultsDiv) {
+    resultsDiv.innerHTML = '';
+    resultsDiv.style.display = 'none';
+  }
+}
+
 // Start voting session
 async function startVoting() {
   const issueNumber = getIssueNumber();
+  
+  // Clear previous results when starting a new vote
+  clearResults();
   
   try {
     const data = await apiRequest('/api/start-voting', 'POST', {
