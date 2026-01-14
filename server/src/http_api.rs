@@ -232,9 +232,9 @@ fn get_current_status(game_state: &SharedState) -> StatusUpdate {
         .game_state
         .players
         .iter()
-        .map(|(id, player)| ConnectedPlayer {
+        .map(|(_, player)| ConnectedPlayer {
             name: player.name.clone(),
-            has_voted: locked_state.game_state.votes.get(id).map(|v| v.is_some()).unwrap_or(false),
+            has_voted: player.confirmed,
         })
         .collect();
 

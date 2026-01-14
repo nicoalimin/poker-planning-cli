@@ -171,9 +171,9 @@ fn get_current_status(game_state: &SharedState) -> http_api::StatusUpdate {
         .game_state
         .players
         .iter()
-        .map(|(id, player)| http_api::ConnectedPlayer {
+        .map(|(_, player)| http_api::ConnectedPlayer {
             name: player.name.clone(),
-            has_voted: locked_state.game_state.votes.get(id).map(|v| v.is_some()).unwrap_or(false),
+            has_voted: player.confirmed,
         })
         .collect();
 
