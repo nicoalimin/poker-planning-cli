@@ -10,10 +10,10 @@ A terminal-based Poker Planning tool for agile teams, featuring a real-time TUI 
 npm install -g poker-planning-cli
 ```
 
-Or use directly with npx:
+Or run directly with npx:
 
 ```bash
-npx poker-planning-cli
+npx poker-client
 ```
 
 ## Usage
@@ -41,9 +41,9 @@ poker-server
 
 ## Features
 
-- **Real-time Multiplayer**: See other players move and vote effectively instantly
-- **TUI Interface**: Fast, keyboard-centric interface (Arrow keys to move, Space to confirm)
-- **Vote Privacy**: Votes are hidden until the Scrum Master reveals them
+- **Real-time Multiplayer**: See other players move and vote effectively instantly.
+- **TUI Interface**: Fast, keyboard-centric interface (Arrow keys to move, Space to confirm).
+- **Vote Privacy**: Votes are hidden until the Scrum Master reveals them.
 
 ## Supported Platforms
 
