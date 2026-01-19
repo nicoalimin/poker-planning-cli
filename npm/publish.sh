@@ -13,7 +13,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 DIST_DIR="$ROOT_DIR/dist"
 NPM_DIR="$SCRIPT_DIR"
 
-VERSION=$(node -p "require('$NPM_DIR/poker-planning-cli/package.json').version")
+VERSION=$(node -p "require('$NPM_DIR/poker-client/package.json').version")
 
 echo -e "${GREEN}📦 Publishing Poker Planning CLI v${VERSION}${NC}"
 echo ""
@@ -76,10 +76,10 @@ if [[ "$1" == "--dry-run" ]]; then
     echo ""
 fi
 
-# Publish platform-specific packages first
-echo -e "${YELLOW}📤 Publishing platform packages...${NC}"
+# Publish platform-specific binary packages first
+echo -e "${YELLOW}📤 Publishing platform binary packages...${NC}"
 
-PLATFORM_PACKAGES=(
+BINARY_PACKAGES=(
     "poker-planning-client-darwin-arm64"
     "poker-planning-client-linux-x64"
     "poker-planning-client-win32-x64"
@@ -88,7 +88,7 @@ PLATFORM_PACKAGES=(
     "poker-planning-server-win32-x64"
 )
 
-for pkg in "${PLATFORM_PACKAGES[@]}"; do
+for pkg in "${BINARY_PACKAGES[@]}"; do
     echo "  Publishing $pkg..."
     cd "$NPM_DIR/$pkg"
     npm publish --access public $DRY_RUN || {
@@ -96,9 +96,25 @@ for pkg in "${PLATFORM_PACKAGES[@]}"; do
     }
 done
 
-# Publish main package
+# Publish poker-client and poker-server packages
 echo ""
-echo -e "${YELLOW}📤 Publishing main package...${NC}"
+echo -e "${YELLOW}📤 Publishing CLI packages...${NC}"
+
+echo "  Publishing poker-client..."
+cd "$NPM_DIR/poker-client"
+npm publish --access public $DRY_RUN || {
+    echo -e "${YELLOW}  ⚠️  Package may already exist at this version${NC}"
+}
+
+echo "  Publishing poker-server..."
+cd "$NPM_DIR/poker-server"
+npm publish --access public $DRY_RUN || {
+    echo -e "${YELLOW}  ⚠️  Package may already exist at this version${NC}"
+}
+
+# Publish meta package last
+echo ""
+echo -e "${YELLOW}📤 Publishing meta package...${NC}"
 cd "$NPM_DIR/poker-planning-cli"
 npm publish --access public $DRY_RUN || {
     echo -e "${YELLOW}  ⚠️  Package may already exist at this version${NC}"
@@ -107,8 +123,10 @@ npm publish --access public $DRY_RUN || {
 echo ""
 echo -e "${GREEN}✅ Publishing complete!${NC}"
 echo ""
-echo -e "Users can now install with:"
-echo -e "  ${GREEN}npm install -g poker-planning-cli${NC}"
-echo ""
-echo -e "Or run directly with npx:"
+echo -e "Users can now run directly with npx:"
 echo -e "  ${GREEN}npx poker-client${NC}"
+echo -e "  ${GREEN}npx poker-server${NC}"
+echo ""
+echo -e "Or install globally:"
+echo -e "  ${GREEN}npm install -g poker-client${NC}"
+echo -e "  ${GREEN}npm install -g poker-server${NC}"

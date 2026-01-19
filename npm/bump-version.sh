@@ -18,6 +18,8 @@ echo "📦 Bumping version to $NEW_VERSION"
 
 # All package directories
 PACKAGES=(
+    "poker-client"
+    "poker-server"
     "poker-planning-cli"
     "poker-planning-client-darwin-arm64"
     "poker-planning-client-linux-x64"
@@ -41,17 +43,41 @@ for pkg in "${PACKAGES[@]}"; do
     fi
 done
 
-# Update optionalDependencies versions in main package
-MAIN_PKG="$SCRIPT_DIR/poker-planning-cli/package.json"
+# Update optionalDependencies versions in poker-client
+CLIENT_PKG="$SCRIPT_DIR/poker-client/package.json"
 node -e "
     const fs = require('fs');
-    const pkg = JSON.parse(fs.readFileSync('$MAIN_PKG', 'utf8'));
+    const pkg = JSON.parse(fs.readFileSync('$CLIENT_PKG', 'utf8'));
     for (const dep of Object.keys(pkg.optionalDependencies || {})) {
         pkg.optionalDependencies[dep] = '$NEW_VERSION';
     }
-    fs.writeFileSync('$MAIN_PKG', JSON.stringify(pkg, null, 2) + '\n');
+    fs.writeFileSync('$CLIENT_PKG', JSON.stringify(pkg, null, 2) + '\n');
 "
-echo "  ✓ Updated optionalDependencies versions"
+echo "  ✓ Updated poker-client optionalDependencies"
+
+# Update optionalDependencies versions in poker-server
+SERVER_PKG="$SCRIPT_DIR/poker-server/package.json"
+node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('$SERVER_PKG', 'utf8'));
+    for (const dep of Object.keys(pkg.optionalDependencies || {})) {
+        pkg.optionalDependencies[dep] = '$NEW_VERSION';
+    }
+    fs.writeFileSync('$SERVER_PKG', JSON.stringify(pkg, null, 2) + '\n');
+"
+echo "  ✓ Updated poker-server optionalDependencies"
+
+# Update dependencies versions in poker-planning-cli meta package
+META_PKG="$SCRIPT_DIR/poker-planning-cli/package.json"
+node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('$META_PKG', 'utf8'));
+    for (const dep of Object.keys(pkg.dependencies || {})) {
+        pkg.dependencies[dep] = '$NEW_VERSION';
+    }
+    fs.writeFileSync('$META_PKG', JSON.stringify(pkg, null, 2) + '\n');
+"
+echo "  ✓ Updated poker-planning-cli dependencies"
 
 echo ""
 echo "✅ Version bumped to $NEW_VERSION"
@@ -59,4 +85,4 @@ echo ""
 echo "Next steps:"
 echo "  1. Build binaries: make all"
 echo "  2. Test locally: npm pack (in each package dir)"
-echo "  3. Publish: make npm-publish"
+echo "  3. Publish: ./npm/publish.sh"

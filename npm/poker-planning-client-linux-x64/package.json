@@ -1,6 +1,6 @@
 {
   "name": "poker-planning-client-linux-x64",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Poker Planning CLI client binary for Linux x64",
   "os": [
     "linux"

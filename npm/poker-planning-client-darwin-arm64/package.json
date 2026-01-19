@@ -1,6 +1,6 @@
 {
   "name": "poker-planning-client-darwin-arm64",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Poker Planning CLI client binary for macOS ARM64 (Apple Silicon)",
   "os": [
     "darwin"

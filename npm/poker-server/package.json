@@ -1,15 +1,13 @@
 {
-  "name": "poker-planning-cli",
+  "name": "poker-server",
   "version": "1.1.2",
-  "description": "A terminal-based Poker Planning tool for agile teams, featuring a real-time TUI client and server",
+  "description": "Poker Planning server for agile teams",
   "keywords": [
     "poker-planning",
     "scrum",
     "agile",
     "planning-poker",
-    "cli",
-    "tui",
-    "terminal"
+    "server"
   ],
   "author": "nicoalimin",
   "license": "MIT",
@@ -21,9 +19,16 @@
   "bugs": {
     "url": "https://github.com/nicoalimin/poker-planning-cli/issues"
   },
-  "dependencies": {
-    "poker-client": "1.1.2",
-    "poker-server": "1.1.2"
+  "bin": {
+    "poker-server": "bin/poker-server"
+  },
+  "files": [
+    "bin"
+  ],
+  "optionalDependencies": {
+    "poker-planning-server-darwin-arm64": "1.1.2",
+    "poker-planning-server-linux-x64": "1.1.2",
+    "poker-planning-server-win32-x64": "1.1.2"
   },
   "engines": {
     "node": ">=14"

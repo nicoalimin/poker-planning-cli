@@ -1,32 +1,31 @@
-# Poker Planning CLI
+# poker-client
 
-A terminal-based Poker Planning tool for agile teams, featuring a real-time TUI client and server.
+Terminal-based Poker Planning client for agile teams.
 
 ![Poker Planning CLI Demo](https://raw.githubusercontent.com/nicoalimin/poker-planning-cli/main/intro.gif)
-
-This is a meta-package that installs both [poker-client](https://www.npmjs.com/package/poker-client) and [poker-server](https://www.npmjs.com/package/poker-server).
 
 ## Installation
 
 ```bash
-npm install -g poker-planning-cli
+npm install -g poker-client
 ```
 
-This installs both `poker-client` and `poker-server` commands.
-
-## Quick Start
-
-For just the client:
+Or run directly with npx:
 
 ```bash
 npx poker-client
 ```
 
-For just the server:
+## Usage
 
 ```bash
-npx poker-server
+poker-client
 ```
+
+The client will connect to `localhost:8888` by default. Use environment variables to configure:
+
+- `POKER_SERVER_HOST` - Server hostname (default: `localhost`)
+- `POKER_SERVER_PORT` - Server port (default: `8888`)
 
 ## Features
 
@@ -39,6 +38,10 @@ npx poker-server
 - macOS (Apple Silicon / ARM64)
 - Linux (x64)
 - Windows (x64)
+
+## See Also
+
+- [poker-server](https://www.npmjs.com/package/poker-server) - Run your own poker planning server
 
 ## License
 

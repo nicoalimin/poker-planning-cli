@@ -22,16 +22,11 @@ function getBinaryPath() {
     process.exit(1);
   }
 
-  // Try to find the package
   const binaryName = platform === "win32" ? "poker-server.exe" : "poker-server";
   
-  // Check in node_modules
   const possiblePaths = [
-    // When installed as a dependency
     path.join(__dirname, "..", "node_modules", packageName, binaryName),
-    // When running from the package itself
     path.join(__dirname, "..", "..", packageName, binaryName),
-    // Hoisted in monorepo
     path.join(__dirname, "..", "..", "..", packageName, binaryName),
   ];
 
@@ -43,7 +38,7 @@ function getBinaryPath() {
 
   console.error(`Could not find binary for ${key}`);
   console.error(`Package ${packageName} may not be installed.`);
-  console.error(`Try reinstalling: npm install poker-planning-cli`);
+  console.error(`Try reinstalling: npm install -g poker-server`);
   process.exit(1);
 }
 
