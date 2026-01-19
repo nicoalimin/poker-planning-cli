@@ -1,0 +1,16 @@
+{
+  "name": "@poker-planning/server-linux-x64",
+  "version": "1.1.0",
+  "description": "Poker Planning CLI server binary for Linux x64",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "author": "nicoalimin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicoalimin/poker-planning-cli.git"
+  },
+  "files": [
+    "poker-server"
+  ]
+}
