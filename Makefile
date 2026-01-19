@@ -89,16 +89,16 @@ NPM_DIR = npm
 .PHONY: npm-prepare
 npm-prepare: all
 	@echo "Copying binaries to npm packages..."
-	cp $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64 $(NPM_DIR)/poker-client-darwin-arm64/poker-client
-	cp $(DIST_DIR)/$(CLIENT_BIN)-linux-x64 $(NPM_DIR)/poker-client-linux-x64/poker-client
-	cp $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe $(NPM_DIR)/poker-client-win32-x64/poker-client.exe
-	cp $(DIST_DIR)/$(SERVER_BIN)-macos-arm64 $(NPM_DIR)/poker-server-darwin-arm64/poker-server
-	cp $(DIST_DIR)/$(SERVER_BIN)-linux-x64 $(NPM_DIR)/poker-server-linux-x64/poker-server
-	cp $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe $(NPM_DIR)/poker-server-win32-x64/poker-server.exe
-	chmod +x $(NPM_DIR)/poker-client-darwin-arm64/poker-client
-	chmod +x $(NPM_DIR)/poker-client-linux-x64/poker-client
-	chmod +x $(NPM_DIR)/poker-server-darwin-arm64/poker-server
-	chmod +x $(NPM_DIR)/poker-server-linux-x64/poker-server
+	cp $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64 $(NPM_DIR)/poker-planning-client-darwin-arm64/poker-client
+	cp $(DIST_DIR)/$(CLIENT_BIN)-linux-x64 $(NPM_DIR)/poker-planning-client-linux-x64/poker-client
+	cp $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe $(NPM_DIR)/poker-planning-client-win32-x64/poker-client.exe
+	cp $(DIST_DIR)/$(SERVER_BIN)-macos-arm64 $(NPM_DIR)/poker-planning-server-darwin-arm64/poker-server
+	cp $(DIST_DIR)/$(SERVER_BIN)-linux-x64 $(NPM_DIR)/poker-planning-server-linux-x64/poker-server
+	cp $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe $(NPM_DIR)/poker-planning-server-win32-x64/poker-server.exe
+	chmod +x $(NPM_DIR)/poker-planning-client-darwin-arm64/poker-client
+	chmod +x $(NPM_DIR)/poker-planning-client-linux-x64/poker-client
+	chmod +x $(NPM_DIR)/poker-planning-server-darwin-arm64/poker-server
+	chmod +x $(NPM_DIR)/poker-planning-server-linux-x64/poker-server
 	@echo "Done!"
 
 # Publish to npm (dry run)

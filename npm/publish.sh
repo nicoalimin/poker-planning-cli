@@ -38,33 +38,33 @@ echo -e "${YELLOW}📋 Copying binaries to npm packages...${NC}"
 
 # Client binaries
 check_binary "$DIST_DIR/poker-client-macos-arm64"
-cp "$DIST_DIR/poker-client-macos-arm64" "$NPM_DIR/poker-client-darwin-arm64/poker-client"
-chmod +x "$NPM_DIR/poker-client-darwin-arm64/poker-client"
-echo "  ✓ poker-client-darwin-arm64"
+cp "$DIST_DIR/poker-client-macos-arm64" "$NPM_DIR/poker-planning-client-darwin-arm64/poker-client"
+chmod +x "$NPM_DIR/poker-planning-client-darwin-arm64/poker-client"
+echo "  ✓ poker-planning-client-darwin-arm64"
 
 check_binary "$DIST_DIR/poker-client-linux-x64"
-cp "$DIST_DIR/poker-client-linux-x64" "$NPM_DIR/poker-client-linux-x64/poker-client"
-chmod +x "$NPM_DIR/poker-client-linux-x64/poker-client"
-echo "  ✓ poker-client-linux-x64"
+cp "$DIST_DIR/poker-client-linux-x64" "$NPM_DIR/poker-planning-client-linux-x64/poker-client"
+chmod +x "$NPM_DIR/poker-planning-client-linux-x64/poker-client"
+echo "  ✓ poker-planning-client-linux-x64"
 
 check_binary "$DIST_DIR/poker-client-windows-x64.exe"
-cp "$DIST_DIR/poker-client-windows-x64.exe" "$NPM_DIR/poker-client-win32-x64/poker-client.exe"
-echo "  ✓ poker-client-win32-x64"
+cp "$DIST_DIR/poker-client-windows-x64.exe" "$NPM_DIR/poker-planning-client-win32-x64/poker-client.exe"
+echo "  ✓ poker-planning-client-win32-x64"
 
 # Server binaries
 check_binary "$DIST_DIR/poker-server-macos-arm64"
-cp "$DIST_DIR/poker-server-macos-arm64" "$NPM_DIR/poker-server-darwin-arm64/poker-server"
-chmod +x "$NPM_DIR/poker-server-darwin-arm64/poker-server"
-echo "  ✓ poker-server-darwin-arm64"
+cp "$DIST_DIR/poker-server-macos-arm64" "$NPM_DIR/poker-planning-server-darwin-arm64/poker-server"
+chmod +x "$NPM_DIR/poker-planning-server-darwin-arm64/poker-server"
+echo "  ✓ poker-planning-server-darwin-arm64"
 
 check_binary "$DIST_DIR/poker-server-linux-x64"
-cp "$DIST_DIR/poker-server-linux-x64" "$NPM_DIR/poker-server-linux-x64/poker-server"
-chmod +x "$NPM_DIR/poker-server-linux-x64/poker-server"
-echo "  ✓ poker-server-linux-x64"
+cp "$DIST_DIR/poker-server-linux-x64" "$NPM_DIR/poker-planning-server-linux-x64/poker-server"
+chmod +x "$NPM_DIR/poker-planning-server-linux-x64/poker-server"
+echo "  ✓ poker-planning-server-linux-x64"
 
 check_binary "$DIST_DIR/poker-server-windows-x64.exe"
-cp "$DIST_DIR/poker-server-windows-x64.exe" "$NPM_DIR/poker-server-win32-x64/poker-server.exe"
-echo "  ✓ poker-server-win32-x64"
+cp "$DIST_DIR/poker-server-windows-x64.exe" "$NPM_DIR/poker-planning-server-win32-x64/poker-server.exe"
+echo "  ✓ poker-planning-server-win32-x64"
 
 echo ""
 
@@ -80,16 +80,16 @@ fi
 echo -e "${YELLOW}📤 Publishing platform packages...${NC}"
 
 PLATFORM_PACKAGES=(
-    "poker-client-darwin-arm64"
-    "poker-client-linux-x64"
-    "poker-client-win32-x64"
-    "poker-server-darwin-arm64"
-    "poker-server-linux-x64"
-    "poker-server-win32-x64"
+    "poker-planning-client-darwin-arm64"
+    "poker-planning-client-linux-x64"
+    "poker-planning-client-win32-x64"
+    "poker-planning-server-darwin-arm64"
+    "poker-planning-server-linux-x64"
+    "poker-planning-server-win32-x64"
 )
 
 for pkg in "${PLATFORM_PACKAGES[@]}"; do
-    echo "  Publishing @poker-planning/$pkg..."
+    echo "  Publishing $pkg..."
     cd "$NPM_DIR/$pkg"
     npm publish --access public $DRY_RUN || {
         echo -e "${YELLOW}  ⚠️  Package may already exist at this version${NC}"
@@ -111,4 +111,4 @@ echo -e "Users can now install with:"
 echo -e "  ${GREEN}npm install -g poker-planning-cli${NC}"
 echo ""
 echo -e "Or run directly with npx:"
-echo -e "  ${GREEN}npx poker-planning-cli poker-client${NC}"
+echo -e "  ${GREEN}npx poker-client${NC}"

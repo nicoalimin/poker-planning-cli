@@ -10,15 +10,15 @@ const arch = process.arch;
 const key = `${platform}-${arch}`;
 
 const CLIENT_PACKAGES = {
-  "darwin-arm64": "@poker-planning/client-darwin-arm64",
-  "linux-x64": "@poker-planning/client-linux-x64",
-  "win32-x64": "@poker-planning/client-win32-x64",
+  "darwin-arm64": "poker-planning-client-darwin-arm64",
+  "linux-x64": "poker-planning-client-linux-x64",
+  "win32-x64": "poker-planning-client-win32-x64",
 };
 
 const SERVER_PACKAGES = {
-  "darwin-arm64": "@poker-planning/server-darwin-arm64",
-  "linux-x64": "@poker-planning/server-linux-x64",
-  "win32-x64": "@poker-planning/server-win32-x64",
+  "darwin-arm64": "poker-planning-server-darwin-arm64",
+  "linux-x64": "poker-planning-server-linux-x64",
+  "win32-x64": "poker-planning-server-win32-x64",
 };
 
 const clientPackage = CLIENT_PACKAGES[key];

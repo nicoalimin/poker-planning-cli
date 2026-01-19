@@ -5,9 +5,9 @@ const path = require("path");
 const fs = require("fs");
 
 const PLATFORM_PACKAGES = {
-  "darwin-arm64": "@poker-planning/client-darwin-arm64",
-  "linux-x64": "@poker-planning/client-linux-x64",
-  "win32-x64": "@poker-planning/client-win32-x64",
+  "darwin-arm64": "poker-planning-client-darwin-arm64",
+  "linux-x64": "poker-planning-client-linux-x64",
+  "win32-x64": "poker-planning-client-win32-x64",
 };
 
 function getBinaryPath() {

@@ -19,12 +19,12 @@ echo "📦 Bumping version to $NEW_VERSION"
 # All package directories
 PACKAGES=(
     "poker-planning-cli"
-    "poker-client-darwin-arm64"
-    "poker-client-linux-x64"
-    "poker-client-win32-x64"
-    "poker-server-darwin-arm64"
-    "poker-server-linux-x64"
-    "poker-server-win32-x64"
+    "poker-planning-client-darwin-arm64"
+    "poker-planning-client-linux-x64"
+    "poker-planning-client-win32-x64"
+    "poker-planning-server-darwin-arm64"
+    "poker-planning-server-linux-x64"
+    "poker-planning-server-win32-x64"
 )
 
 for pkg in "${PACKAGES[@]}"; do
