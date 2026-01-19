@@ -82,6 +82,35 @@ clean:
 clean-dist:
 	rm -rf $(DIST_DIR)
 
+# NPM Publishing targets
+NPM_DIR = npm
+
+# Prepare npm packages (copy binaries)
+.PHONY: npm-prepare
+npm-prepare: all
+	@echo "Copying binaries to npm packages..."
+	cp $(DIST_DIR)/$(CLIENT_BIN)-macos-arm64 $(NPM_DIR)/poker-planning-client-darwin-arm64/poker-client
+	cp $(DIST_DIR)/$(CLIENT_BIN)-linux-x64 $(NPM_DIR)/poker-planning-client-linux-x64/poker-client
+	cp $(DIST_DIR)/$(CLIENT_BIN)-windows-x64.exe $(NPM_DIR)/poker-planning-client-win32-x64/poker-client.exe
+	cp $(DIST_DIR)/$(SERVER_BIN)-macos-arm64 $(NPM_DIR)/poker-planning-server-darwin-arm64/poker-server
+	cp $(DIST_DIR)/$(SERVER_BIN)-linux-x64 $(NPM_DIR)/poker-planning-server-linux-x64/poker-server
+	cp $(DIST_DIR)/$(SERVER_BIN)-windows-x64.exe $(NPM_DIR)/poker-planning-server-win32-x64/poker-server.exe
+	chmod +x $(NPM_DIR)/poker-planning-client-darwin-arm64/poker-client
+	chmod +x $(NPM_DIR)/poker-planning-client-linux-x64/poker-client
+	chmod +x $(NPM_DIR)/poker-planning-server-darwin-arm64/poker-server
+	chmod +x $(NPM_DIR)/poker-planning-server-linux-x64/poker-server
+	@echo "Done!"
+
+# Publish to npm (dry run)
+.PHONY: npm-publish-dry
+npm-publish-dry: npm-prepare
+	./$(NPM_DIR)/publish.sh --dry-run
+
+# Publish to npm
+.PHONY: npm-publish
+npm-publish: npm-prepare
+	./$(NPM_DIR)/publish.sh
+
 # Show help
 .PHONY: help
 help:
@@ -99,4 +128,7 @@ help:
 	@echo "  server-all     Build only server for all platforms"
 	@echo "  clean          Clean all build artifacts"
 	@echo "  clean-dist     Clean only distribution directory"
+	@echo "  npm-prepare    Copy binaries to npm packages"
+	@echo "  npm-publish-dry Dry run npm publish"
+	@echo "  npm-publish    Publish to npm registry"
 	@echo "  help           Show this help message"

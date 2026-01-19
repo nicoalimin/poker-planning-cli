@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+const { execFileSync } = require("child_process");
+const path = require("path");
+const fs = require("fs");
+
+const PLATFORM_PACKAGES = {
+  "darwin-arm64": "poker-planning-client-darwin-arm64",
+  "linux-x64": "poker-planning-client-linux-x64",
+  "win32-x64": "poker-planning-client-win32-x64",
+};
+
+function getBinaryPath() {
+  const platform = process.platform;
+  const arch = process.arch;
+  const key = `${platform}-${arch}`;
+
+  const packageName = PLATFORM_PACKAGES[key];
+  if (!packageName) {
+    console.error(`Unsupported platform: ${platform}-${arch}`);
+    console.error(`Supported platforms: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`);
+    process.exit(1);
+  }
+
+  // Try to find the package
+  const binaryName = platform === "win32" ? "poker-client.exe" : "poker-client";
+  
+  // Check in node_modules
+  const possiblePaths = [
+    // When installed as a dependency
+    path.join(__dirname, "..", "node_modules", packageName, binaryName),
+    // When running from the package itself
+    path.join(__dirname, "..", "..", packageName, binaryName),
+    // Hoisted in monorepo
+    path.join(__dirname, "..", "..", "..", packageName, binaryName),
+  ];
+
+  for (const binaryPath of possiblePaths) {
+    if (fs.existsSync(binaryPath)) {
+      return binaryPath;
+    }
+  }
+
+  console.error(`Could not find binary for ${key}`);
+  console.error(`Package ${packageName} may not be installed.`);
+  console.error(`Try reinstalling: npm install poker-planning-cli`);
+  process.exit(1);
+}
+
+const binaryPath = getBinaryPath();
+
+try {
+  execFileSync(binaryPath, process.argv.slice(2), {
+    stdio: "inherit",
+    env: process.env,
+  });
+} catch (error) {
+  if (error.status !== undefined) {
+    process.exit(error.status);
+  }
+  throw error;
+}

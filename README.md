@@ -34,13 +34,28 @@ aws ssm start-session \
 *Note: Requires AWS CLI and Session Manager plugin.*
 
 ### 2. Install Client
-You can download the latest client binary using the install script (auto-detects your platform):
+
+**Option A: Install via npm (recommended)**
+
+```bash
+npm install -g poker-planning-cli
+```
+
+Or run directly with npx:
+
+```bash
+npx poker-client
+```
+
+**Option B: Install via shell script**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nicoalimin/poker-planning-cli/main/install.sh | bash
 ```
 
-Or manually download the binary for your platform:
+**Option C: Manual download**
+
+Manually download the binary for your platform:
 
 ```bash
 # macOS (Apple Silicon)
