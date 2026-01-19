@@ -33,52 +33,56 @@ aws ssm start-session \
 
 *Note: Requires AWS CLI and Session Manager plugin.*
 
-### 2. Install Client
+### 2. Install & Run Client
 
-**Option A: Install via npm (recommended)**
-
-```bash
-npm install -g poker-planning-cli
-```
-
-Or run directly with npx:
+**Option A: Run directly with npx (no install needed)**
 
 ```bash
 npx poker-client
 ```
 
-**Option B: Install via shell script**
+**Option B: Install globally via npm**
+
+```bash
+npm install -g poker-client
+poker-client
+```
+
+**Option C: Install via shell script**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nicoalimin/poker-planning-cli/main/install.sh | bash
-```
-
-**Option C: Manual download**
-
-Manually download the binary for your platform:
-
-```bash
-# macOS (Apple Silicon)
-curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-macos-arm64
-
-# Linux (x64)
-curl -L -o client https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-linux-x64
-
-# Windows (x64) - use PowerShell or download from browser
-curl -L -o client.exe https://github.com/nicoalimin/poker-planning-cli/releases/download/v1.1.0/poker-client-windows-x64.exe
-```
-
-Then make it executable (macOS/Linux only):
-```bash
-chmod +x client
-```
-
-### 3. Run
-Once the port forwarding is active and the client is installed:
-
-```bash
 ./client
 ```
+
+**Option D: Manual download**
+
+Download the binary for your platform from [Releases](https://github.com/nicoalimin/poker-planning-cli/releases):
+
+| Platform | Binary |
+|----------|--------|
+| macOS (Apple Silicon) | `poker-client-macos-arm64` |
+| Linux (x64) | `poker-client-linux-x64` |
+| Windows (x64) | `poker-client-windows-x64.exe` |
+
+Then make it executable (macOS/Linux only): `chmod +x poker-client-*`
+
+## Running Your Own Server
+
+To host your own poker planning server:
+
+```bash
+npx poker-server
+```
+
+Or install globally:
+
+```bash
+npm install -g poker-server
+poker-server
+```
+
+The server listens on port 8888 by default.
 
 ## Features
 - **Real-time Multiplayer**: See other players move and vote effectively instantly.
